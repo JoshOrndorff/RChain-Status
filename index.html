@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Electron GRPC test</title>
+    <script type="text/javascript" src="page.js"></script>
+  </head>
+  <body>
+    <h1>Starting a Node</h1>
+    <p>This dapp requires a node to be running. You may find a puplically available node such as <code>rnode-test.rhobot.net</code> useful. Or you may consider the following and start your own local node.</p>
+    <ul>
+      <li>Required: Node must be a validator. Private keys are available in <code>./rnode/genesis</code></li>
+      <li>Required: Node must have non-zero weight. Using an above key ensures this.</li>
+      <li>Suggestion: Standalone nodes are easier to start for testing purposes.</li>
+    </ul>
+    <p>This example command will work in most cases.<br  />
+      <code>rnode run -s -n --validator-private-key bc6391d3acdd9135dde2a0eafdd2f4d9edb10111efff5d72563b10a69e936535</code></p>
+    <button id="start-node">Attempt to Start Local Node</button>
+
+    <h1>Send Code</h1>
+    <input id="code" type="text" />
+    <button id="deploy">Deploy</button>
+    <p id="result"></p>
+
+    <h1>Force propose</h1>
+    <p>If your node is taking too long to propose a block, you can force it.</p>
+    <button id="propose">Propose</button>
+  </body>
+</html>

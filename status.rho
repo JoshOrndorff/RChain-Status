@@ -1,0 +1,171 @@
+new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
+  /**
+   * Users register by supplying a return channel. Contract returns
+   * an unforgeable OCap called the "control panel" for updating status.
+   */
+  contract @"register"(return) = {
+    new status, controlPanel in {
+
+      // Set the initial default status
+      status!("I'm new here! Haven't posted anything yet")
+      |
+
+      /**
+       * Control panel OCap has a method  to set a new status
+       * @param newStatus The new status (a string) that the user is posting
+       * @param ack Just an acknowledgement channel
+       * @return Just an acknowledgement
+       */
+      contract @[*controlPanel, "newStatus"](@newStatus, ack) = {
+        // Account deletion is permanent (see below) because this
+        // receive will block indefinitely when account is deleted
+        for (_ <- status){
+          status!(newStatus)
+          |
+          ack!(0)
+        }
+      }
+      |
+
+      /**
+       * Control panel OCap has a method to delete the account. Any account
+       * with no data on the status state channel is deleted.
+       * @return Just an acknowledgement
+       */
+      contract @[*controlPanel, "delete"](ack) = {
+        for (_ <- status){
+          ack!(0)
+        }
+      }
+      |
+
+      /**
+       * Control panel OCap has a method for checking the status.
+       * This may eventually be useful for creating revokable forwarders for friends
+       * to follow your status, but the data will be onchain in the clear anyway,
+       * so maybe this isn't so useful.
+       * @param A return channel
+       * @return A string of the currently set status
+       * Check status (Useful for creating revokable forwarders)
+       */
+      contract@[*controlPanel, "check"](result) = {
+        for (@s <- status) {
+          status!(s) |
+          result!(s)
+        }
+      }
+      |
+
+      /**
+       * Create revokable status checker capability for your friends.
+       * If they ever become frenemies, you can revoke their capability
+       * to follow you, but remember the data is on-chain in the clear,
+       * so maybe this isn't very useful
+       * @param A return channel
+       * @return
+       */
+      contract @[*controlPanel, "makeRevCheck"](result) = {
+        new active, check, kill in {
+          // Forwarder starts as active
+          active!(true) |
+
+          /**
+           * Account owner can kill the forwarder.
+           * @param ack A acknowledgement channel
+           * @return Just an acknowledgement
+           */
+          for (ack <- kill; _ <- active){
+            active!(false) |
+            ack!(0)
+          }
+          |
+
+          /**
+           * For friend to check status. Stops working once active contains false.
+           * @param return A return channel
+           * @return A string representing the current status
+           */
+          for (return <- check; @true <- active; @s <- status){
+          stdout!("!!!!!!!!!!!!")|
+            active!(true) |
+            status!(s) |
+            return!(s)
+          }
+          |
+          result!(*check, *kill)
+        }
+      }
+      |
+
+      // Give back the control panel
+      //TODO Why can't I send a read-only bundle here?
+      return!(*controlPanel)
+    }
+  }
+  |
+
+  //////////////
+  /// Story of Alice keeping her friends updated on her goings-on,
+  /// and Bob, her friend, who follows closely.
+  //////////////
+  new bob in {
+    // She registers and awaits control panel in reply
+    new ack in {
+      stdout!("Alice Registering") |
+      @"register"!(*ack) |
+      for (aliceCP <- ack){
+
+        // She makes a status checker for her friend Bob
+        stdout!("Control Panel received, Alice making checker") |
+        @[*aliceCP, "makeRevCheck"]!(*ack) |
+        for (bobCheck, bobKill <- ack){
+
+          // And sends it over so he can follow her.
+          stdout!("Alice sending checker to Bob") |
+          bob!(*bobCheck) |
+          for (bobCheck <- bob){
+
+            // When Bob sees that he can check Alice's status, he does.
+            stdout!("Bob receiving checker from Alice") |
+            bobCheck!(*ack) |
+            for(@status <- ack) {
+              stdout!("Bob received status: " ++ status) |
+
+              // Alice updates her status
+              stdout!("Alice updating status") |
+              @[*aliceCP, "newStatus"]!("Having fun traveling in Europe!", *ack) |
+
+              for (_ <- ack) {
+
+                // Bob checks again
+                stdout!("Bob about to check again") |
+                bobCheck!(*ack) | //TODO Now I'm stuck here
+                for(@status <- ack) {
+                  stdout!("Bob received status: " ++ status) |
+
+                  // Later she gets angry and revokes his reading capability
+                  stdoutAck!("Alice revoking Bob's read cap", *ack) |
+                  for(_ <- ack) {
+                    bobKill!(*ack) |
+
+                    for (_ <- ack) {
+
+                      // She continues to post
+                      @[*aliceCP, "newStatus"]!("Bob stinks. He should never see this on the screen") |
+
+                      // But Bob can't read anymore
+                      bobCheck!(*ack) |
+                      for(_ <- ack) {
+                        stdout!("If we get here something is wrong.")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

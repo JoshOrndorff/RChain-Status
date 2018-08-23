@@ -1,0 +1,19 @@
+{
+  "name": "Electron-Rchain-DApp",
+  "version": "1.0.0",
+  "description": "Use rchain with electron",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "Joshy Orndorff",
+  "license": "Unlicense",
+  "devDependencies": {},
+  "dependencies": {
+    "electron": "^2.0.7",
+    "grpc": "^1.14.1",
+    "@grpc/proto-loader": "^0.3.0",
+    "RChain-API": "^1.0.0"
+  }
+}
