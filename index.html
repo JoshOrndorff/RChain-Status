@@ -17,10 +17,17 @@
       <code>rnode run -s -n --validator-private-key bc6391d3acdd9135dde2a0eafdd2f4d9edb10111efff5d72563b10a69e936535</code></p>
     <button id="start-node">Attempt to Start Local Node</button>
 
-    <h1>Send Code</h1>
-    <input id="code" type="text" />
-    <button id="deploy">Deploy</button>
+    <h1>Register for Status</h1>
+    <p>Enter a name that you want to go by. This name is the channel on which you will send commands to update and check your status. This is a huge security hole, and in a future release, we will use unforgeable names, but RNode does not have a working name registry yet.</p>
+    <input id="name" type="text" />
+    <button id="register">Register</button>
     <p id="result"></p>
+
+    <h1>Your User Controls</h1>
+    TODO Show current status, set new status
+
+    <h1>Check friend's satus</h1>
+    TODO Box for friend's name, and then show their status
 
     <h1>Force propose</h1>
     <p>If your node is taking too long to propose a block, you can force it.</p>

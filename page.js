@@ -14,18 +14,24 @@ const myNode = RNode(grpc, {host: "localhost", port: 40401})
 window.addEventListener("DOMContentLoaded", () => {
 
   var startButton = document.getElementById("start-node")
-  var codeBox = document.getElementById("code")
-  var deployButton = document.getElementById("deploy")
+
+  var nameBox = document.getElementById("name")
+  var registerButton = document.getElementById("register")
+
   var resultP = document.getElementById("result")
   var proposeButton = document.getElementById("propose")
 
   startButton.addEventListener("click", () => {
     //TODO implement this
+    // Maybe also something to deploy the proper contract.
     console.info("This feature is not yet implemented. Please issue the command manually.")
   })
 
-  deployButton.addEventListener("click", () => {
-    var deployData = {term: codeBox.value,
+  registerButton.addEventListener("click", () => {
+    var name = nameBox.value
+    var code = `@"register"!("${name}")`
+    console.log(code)
+    var deployData = {term: code,
                       timestamp: new Date().valueOf()
                       // from: '0x1',
                       // nonce: 0,
