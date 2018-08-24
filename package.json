@@ -17,9 +17,10 @@
   "license": "Unlicense",
   "devDependencies": {},
   "dependencies": {
+    "@grpc/proto-loader": "^0.3.0",
+    "RChain-API": "github:JoshOrndorff/RChain-API",
     "electron": "^2.0.7",
     "grpc": "^1.14.1",
-    "@grpc/proto-loader": "^0.3.0",
-    "RChain-API": "github:JoshOrndorff/RChain-API"
+    "rchain-api": "github:JoshOrndorff/RChain-API"
   }
 }
