@@ -1,1 +1,5 @@
 node_modules
+.rnode/rspace
+.rnode/casper-block-store
+.rnode/node.certificate.pem
+.rnode/node.key.pem
