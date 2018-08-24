@@ -6,7 +6,8 @@
     <script type="text/javascript" src="page.js"></script>
   </head>
   <body>
-    <h1>Starting a Node</h1>
+    <h1>Setup</h1>
+    <h2>Starting a Node</h2>
     <p>This dapp requires a node to be running. You may find a puplically available node such as <code>rnode-test.rhobot.net</code> useful. Or you may consider the following and start your own local node.</p>
     <ul>
       <li>Required: Node must be a validator. Private keys are available in <code>./rnode/genesis</code></li>
@@ -14,17 +15,27 @@
       <li>Suggestion: Standalone nodes are easier to start for testing purposes.</li>
     </ul>
     <p>This example command will work in most cases.<br  />
-      <code>rnode run -s -n --validator-private-key bc6391d3acdd9135dde2a0eafdd2f4d9edb10111efff5d72563b10a69e936535</code></p>
+    <code>rnode run -s -n --validator-private-key bc6391d3acdd9135dde2a0eafdd2f4d9edb10111efff5d72563b10a69e936535</code>
+    But this button is not implemented yet.</p>
     <button id="start-node">Attempt to Start Local Node</button>
 
+    <h2>Deploying the contract(s)</h2>
+    <p>Todo: These buttons are not yet implemented</p>
+    Deploy status contract on public name: <input id="contract-name" type="text" />
+    <button id="deploy-contract">Deploy Contract</button>
+
+
     <h1>Register for Status</h1>
-    <p>Enter a name that you want to go by. This name is the channel on which you will send commands to update and check your status. This is a huge security hole, and in a future release, we will use unforgeable names, but RNode does not have a working name registry yet.</p>
+    <p>Enter a name that you want to go by. This name is the public channel on which you will send commands to update and check your status. Using a public name is a <strong>huge security hole</strong>, but alas, RNode does not have a working name registry yet. In the future, we will use unforgeable names.</p>
     <input id="name" type="text" />
     <button id="register">Register</button>
     <p id="result"></p>
 
     <h1>Your User Controls</h1>
-    TODO Show current status, set new status
+    <p>Your current status is: <span id="current-status">(not yet implemented)</span>.<button id="fetch">Fetch latest</button></p>
+    <p>new status:</p>
+    <input id="new-status" type="text" />
+    <button id="set-status">Post</button>
 
     <h1>Check friend's satus</h1>
     TODO Box for friend's name, and then show their status
