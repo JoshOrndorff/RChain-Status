@@ -20,6 +20,6 @@
     "electron": "^2.0.7",
     "grpc": "^1.14.1",
     "@grpc/proto-loader": "^0.3.0",
-    "RChain-API": "^1.0.0"
+    "RChain-API": "github:JoshOrndorff/RChain-API"
   }
 }
