@@ -3,8 +3,9 @@ new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
    * Users register by supplying a return channel. Contract returns
    * an unforgeable OCap called the "control panel" for updating status.
    */
-  contract @"register"(return) = {
-    new status, controlPanel in {
+  contract @"register"(controlPanel, return) = {
+    stdout!("in  register") |
+    new status in {
 
       // Set the initial default status
       status!("I'm new here! Haven't posted anything yet")
@@ -19,7 +20,9 @@ new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
       contract @[*controlPanel, "newStatus"](@newStatus, ack) = {
         // Account deletion is permanent (see below) because this
         // receive will block indefinitely when account is deleted
+        stdout!("inside of newStatus") |
         for (_ <- status){
+          stdout!("in newStatus: received status from state channel") |
           status!(newStatus)
           |
           ack!(0)
@@ -51,7 +54,7 @@ new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
       contract@[*controlPanel, "check"](result) = {
         stdout!("inside of check") |
         for (@s <- status) {
-          stdout!("received status from state channel") |
+          stdout!("in check: received status from state channel") |
           status!(s) |
           result!(s)
         }
@@ -101,8 +104,8 @@ new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
       }
       |
 
-      // Give back the control panel
-      //TODO Why can't I send a read-only bundle here?
+      // Give back the control panel (even though user passed it in).
+      //TODO Why can't I send a write-only bundle here?
       return!(*controlPanel)
     }
   }
@@ -113,11 +116,11 @@ new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
   /// Story of Alice keeping her friends updated on her goings-on,
   /// and Bob, her friend, who follows closely.
   //////////////
-  new bob, ack in {
+  new aliceCP, bob, ack in {
     // She registers and awaits control panel in reply
     stdout!("Alice Registering") |
-    @"register"!(*ack) |
-    for (aliceCP <- ack){
+    @"register"!(*aliceCP, *ack) |
+    for (_ <- ack){
 
       // She makes a status checker for her friend Bob
       stdout!("Control Panel received, Alice making checker") |

@@ -20,6 +20,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   var friendBox = document.getElementById("friend-name")
   var checkButton = document.getElementById("check-status")
+  var friendStatusP = document.getElementById("friend-status")
 
 
   var proposeButton = document.getElementById("propose").addEventListener("click", myNode.createBlock)
@@ -28,7 +29,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   registerButton.addEventListener("click", () => {
     var userName = nameBox.value
-    var code = `@"register"!("${userName}")`
+    // TODO: What am I supposed to do with the ack channel when calling from off-chain?
+    var code = `@"register"!("${userName}", 0)`
     console.log(code)
     var deployData = {term: code,
                       timestamp: new Date().valueOf()
@@ -47,7 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
     var userName = friendBox.value
     // Generate a public ack channel
     // TODO this should be unforgeable. Can I make one from JS?
-    var ack = "testAck"//Math.random().toString(36).substring(7)
+    var ack = Math.random().toString(36).substring(7)
     console.log("ack is " + ack)
 
     // This shouldn't actually require a transaction, for publicly visible data, right?
@@ -68,7 +70,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // TODO: If we got no blocks back, fail gracefully.
         var lastBlock = blockResults.slice(-1).pop()
         var lastDatum = lastBlock.postBlockData.slice(-1).pop()
-        statusP.innerHTML = RHOCore.toRholang(lastDatum)
+        friendStatusP.innerHTML = RHOCore.toRholang(lastDatum)
       })
     }).catch(oops => { console.log(oops); })
   })
