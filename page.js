@@ -13,27 +13,16 @@ const myNode = RNode(grpc, {host: "localhost", port: 40401})
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  var startButton = document.getElementById("start-node")
-  //TODO status contract deployment stuff
-
   var nameBox = document.getElementById("name")
   var registerButton = document.getElementById("register")
-  var resultP = document.getElementById("result")
-
-  var statusP = document.getElementById("current-status")
-  var fetchButton = document.getElementById("fetch")
   var newStatusBox = document.getElementById("new-status")
   var setStatusButton = document.getElementById("set-status")
 
+  var friendBox = document.getElementById("friend-name")
+  var checkButton = document.getElementById("check-status")
+
+
   var proposeButton = document.getElementById("propose").addEventListener("click", myNode.createBlock)
-
-
-
-  startButton.addEventListener("click", () => {
-    //TODO implement this
-    // Maybe also something to deploy the proper contract.
-    console.info("This feature is not yet implemented. Please issue the command manually.")
-  })
 
 
 
@@ -54,8 +43,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
 
-  fetchButton.addEventListener("click", () => {
-    var userName = nameBox.value
+  checkButton.addEventListener("click", () => {
+    var userName = friendBox.value
     // Generate a public ack channel
     // TODO this should be unforgeable. Can I make one from JS?
     var ack = "testAck"//Math.random().toString(36).substring(7)
@@ -76,6 +65,7 @@ window.addEventListener("DOMContentLoaded", () => {
       myNode.listenForDataAtName(ack)
       .then((blockResults) => {
         console.log("blocks received: " + blockResults.length)
+        // TODO: If we got no blocks back, fail gracefully.
         var lastBlock = blockResults.slice(-1).pop()
         var lastDatum = lastBlock.postBlockData.slice(-1).pop()
         statusP.innerHTML = RHOCore.toRholang(lastDatum)
