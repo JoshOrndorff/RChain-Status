@@ -8,14 +8,14 @@ Special Thanks: Dan Connolly
 It's ~~nice~~ necessary to know what you're building before you start building it. So you may want to launch the project before we even begin.
 
 1. Install RNode ([instructions](todo))
-2. Install node and npm `todo`
+2. Install node and npm ([instructions](todo))
 3. Clone the repo `git clone https://github.com/JoshOrndorff/Rchain-Status.git`
 4. Change into the project directory `cd Rchain-Status`
-5. Install dependencies `npm install`5
+5. Install dependencies `npm install`
 6. Start a fresh, pre-configured RNode `npm run fresh`
 7. Deploy the necessary smart contract to your node `npm run deploy-contract`
 8. Launch the dapp frontend `npm start`
-9. Coming soon: View the frontend in your browser (after we make it an express app)
+9. Navigate to the user interface in your favorite browser at `localhost:54321`
 
 ## Overview of writing a dapp
 Before we begin, I'll show you the plan. These are the big-picture steps that you'll need to follow in order to write any dap
