@@ -1,22 +1,24 @@
 "use strict"
 
-
-// Include the RChain-API (may have to npm install --save github:JoshOrndorff/RChain-API)
-const {RNode, RHOCore, logged} = require("rchain-api")
+const {RNode, RHOCore, logged} = require("rchain-api") //npm install --save github:JoshOrndorff/RChain-API
 const express = require('express')
 const grpc = require('grpc')
-//const protoLoader = require('@grpc/proto-loader')
 
-//TODO this should be configurable at launch if not in the ui.
-var myNode = RNode(grpc, {host: "localhost", port: 40401})
+// Setup server parameters
+var host   = process.argv[2] ? process.argv[2] : "localhost"
+var port   = process.argv[3] ? process.argv[3] : 40401
+var uiPort = process.argv[4] ? process.argv[4] : 8080
+
+var myNode = RNode(grpc, {host, port})
 var app = express()
 
+// Serve static assets like index.html and page.js from root directory
 app.use(express.static(__dirname))
 
-// Don't need a route for / because is static
-
-app.listen(54321, () => {
-  console.log("started")
+app.listen(uiPort, () => {
+  console.log("RChain status dapp started.")
+  console.log(`Connected to RNode at ${host}:${port}.`)
+  console.log(`Userinterface on port ${uiPort}`)
 })
 
 
