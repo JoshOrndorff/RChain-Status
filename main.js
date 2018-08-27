@@ -37,7 +37,7 @@ app.post('/register', (req, res) => {
   myNode.doDeploy(deployData).then(result => {
     return myNode.createBlock()
   }).then(result => {
-    res.send(result.message)
+    res.send(result)
   }).catch(oops => { console.log(oops); })
 })
 
