@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint --format unix --ignore-pattern node_modules/ *.js",
     "fresh": "rm -rf .rnode/rspace .rnode/casper-block-store && rnode run --data_dir .rnode",
     "deploy-contract": "rnode deploy --from 0x0 --nonce 0 --phlo-limit 0 --phlo-price 0 status.rho && rnode propose",
     "start": "node main.js"
@@ -15,7 +16,11 @@
   },
   "author": "Joshy Orndorff",
   "license": "Unlicense",
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^5.4.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
+  },
   "dependencies": {
     "@grpc/proto-loader": "^0.3.0",
     "express": "^4.16.3",
