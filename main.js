@@ -1,91 +1,110 @@
-"use strict"
-
-const {RNode, RHOCore, logged} = require("rchain-api") //npm install --save github:JoshOrndorff/RChain-API
-const express = require('express')
-const grpc = require('grpc')
-
-// Setup server parameters
-var host   = process.argv[2] ? process.argv[2] : "localhost"
-var port   = process.argv[3] ? process.argv[3] : 40401
-var uiPort = process.argv[4] ? process.argv[4] : 8080
-
-var myNode = RNode(grpc, {host, port})
-var app = express()
-
-// Serve static assets like index.html and page.js from root directory
-app.use(express.static(__dirname))
-
-app.listen(uiPort, () => {
-  console.log("RChain status dapp started.")
-  console.log(`Connected to RNode at ${host}:${port}.`)
-  console.log(`Userinterface on port ${uiPort}`)
-})
+const { RNode, RHOCore } = require('rchain-api');
 
 
-/////////////////////////////////////////////////
+function main(argv, { grpc, express, clock, random }) {
+  // Setup server parameters
+  const host = argv[2] ? argv[2] : 'localhost';
+  const port = argv[3] ? parseInt(argv[3], 10) : 40401;
+  const uiPort = argv[4] ? parseInt(process.argv[4], 10) : 8080;
+
+  const myNode = RNode(grpc, { host, port });
+  const app = express();
+
+  // Serve static assets like index.html and page.js from root directory
+  app.use(express.static(__dirname));
+
+  const deploy = code => myNode
+    .doDeploy({ code, timestamp: clock.valueOf() })
+    .then(_ => myNode.createBlock());
+
+  app.post('/register', registerHandler(deploy));
+  app.post('/check', checkHandler(deploy, myNode, random));
+  app.post('/set', setHandler(deploy));
+
+  app.listen(uiPort, () => {
+    console.log('RChain status dapp started.');
+    console.log(`Connected to RNode at ${host}:${port}.`);
+    console.log(`Userinterface on port ${uiPort}`);
+  });
+}
 
 
-app.post('/register', (req, res) => {
-  // TODO: What am I supposed to do with the ack channel when calling from off-chain?
-  var code = `@"register"!("${req.query.name}", 0)`
-  var deployData = {term: code,
-                    timestamp: new Date().valueOf()
-                    // from: '0x1',
-                    // nonce: 0,
-                   }
-
-  myNode.doDeploy(deployData).then(result => {
-    return myNode.createBlock()
-  }).then(result => {
-    res.send(result)
-  }).catch(oops => { console.log(oops); })
-})
+/**
+ * Turn a string into a Rholang string literal, quoting as necessary.
+ */
+function strLit(txt) {
+  return JSON.stringify(txt);
+}
 
 
-
-app.post('/check', (req, res) => {
-  // Generate a public ack channel
-  // TODO this should be unforgeable. Can I make one from JS?
-  var ack = Math.random().toString(36).substring(7)
-
-  // This shouldn't actually require a transaction, for publicly visible data, right?
-  // Check the status, sending it to the ack channel
-  var code = `@["${req.query.name}", "check"]!("${ack}")`
-  var deployData = {term: code,
-                    timestamp: new Date().valueOf()
-                    // from: '0x1',
-                    // nonce: 0,
-                   }
-  myNode.doDeploy(deployData).then(_ => {
-    return myNode.createBlock()
-  }).then(_ => {
-    // Get the data from the node
-    return myNode.listenForDataAtName(ack)
-  }).then((blockResults) => {
-    if(blockResults.length === 0){
-      res.code = 404
-      res.send("No data found")
-      //TODO Do I need to return here?
-    }
-    var lastBlock = blockResults.slice(-1).pop()
-    var lastDatum = lastBlock.postBlockData.slice(-1).pop()
-    res.send(RHOCore.toRholang(lastDatum))
-  }).catch(oops => { console.log(oops); })
-})
+function bail(res, oops) {
+  console.log(oops);
+  res.status(500).send(JSON.stringify(oops));
+}
 
 
+function registerHandler(deploy) {
+  return (req, res) => {
+    const nameExpr = strLit(req.query.name);
 
-app.post("/set", (req, res) => {
-  var code = `@["${req.query.name}", "newStatus"]!("${req.query.status}", "ack")`
-  var deployData = {term: code,
-                    timestamp: new Date().valueOf()
-                    // from: '0x1',
-                    // nonce: 0,
-                   }
+    // TODO: use a non-trivial return channel and wait for results there.
+    deploy(`@'register'!(${nameExpr}, Nil)`)
+      .then((result) => {
+        res.send(result);
+      }).catch(oops => bail(res, oops));
+  };
+}
 
-  myNode.doDeploy(deployData).then(result => {
-    return myNode.createBlock()
-  }).then(result => {
-    res.send("Status updated successfully")
-  }).catch(oops => { console.log(oops); })
-})
+
+function checkHandler(deploy, myNode, random) {
+  return (req, res) => {
+    const nameExpr = strLit(req.query.name);
+
+    // Generate a public ack channel
+    // TODO this should be unforgeable. Can I make one from JS?
+    const ack = random().toString(36).substring(7);
+
+    // Check the status, sending it to the ack channel
+    deploy(`@[${nameExpr}, "check"]!("${ack}")`)
+      .then(_ => myNode.listenForDataAtName(ack)) // Get the data from the node
+      .then((blockResults) => {
+        if (blockResults.length === 0) {
+          res.status(404).send('No data found');
+          return;
+        }
+        const lastBlock = blockResults.slice(-1).pop();
+        const lastDatum = lastBlock.postBlockData.slice(-1).pop();
+        res.send(RHOCore.toRholang(lastDatum));
+      }).catch(oops => bail(res, oops));
+  };
+}
+
+
+function setHandler(deploy) {
+  return (req, res) => {
+    const info = {
+      name: strLit(req.query.name),
+      status: strLit(req.query.status),
+    };
+
+    deploy(`@[${info.name}, "newStatus"]!(${info.status}, "ack")`)
+      .then(() => {
+        res.send('Status updated successfully');
+      }).catch(oops => bail(res, oops));
+  };
+}
+
+
+if (require.main === module) {
+  /* eslint-disable global-require */
+
+  // Import primitive effects only when invoked as main module.
+  main(process.argv, {
+    // If express followed ocap discipine, we would pass it
+    // access to files and the network and such.
+    express: require('express'),
+    grpc: require('grpc'),
+    clock: () => new Date(),
+    random: Math.random,
+  });
+}
