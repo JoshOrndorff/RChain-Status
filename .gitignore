@@ -3,3 +3,4 @@ node_modules
 .rnode/casper-block-store
 .rnode/node.certificate.pem
 .rnode/node.key.pem
+*~
