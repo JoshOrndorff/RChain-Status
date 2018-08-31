@@ -4,54 +4,22 @@ env:
   node: true
   es6: true
 rules:
-  no-undef:
-    - off
   no-unused-vars:
-    - off
+    - error
     -
       argsIgnorePattern: "_.*"
       varsIgnorePattern: "_.*"
   no-console:
     - off
-  no-var:
-    - off
-  vars-on-top:
-    - off
-  strict:
-    - off
-  quotes:
-    - off
-  prefer-template:
-    - off
-  semi:
-    - off
-  comma-dangle:
-    - off
-  arrow-body-style:
-    - off
-  arrow-parens:
-    - off
-  object-shorthand:
-    - off
-  object-curly-spacing:
-    - off
+  no-use-before-define:
+    - error
+    - nofunc
   object-curly-newline:
-    - off
-  indent:
-    - off
-  no-multi-spaces:
-    - off
-  spaced-comment:
-    - off
-  no-multiple-empty-lines:
-    - off
-  space-in-parens:
-    - off
-  padded-blocks:
-    - off
-  keyword-spacing:
-    - off
-  space-before-blocks:
-    - off
-  newline-per-chained-call:
-    - off
+    - error
+    -
+      ObjectExpression:
+        multiline: true
+      ObjectPattern:
+        # Don't discourage long-ish lists of named powerful objects.
+        multiline: true
+        minProperties: 5

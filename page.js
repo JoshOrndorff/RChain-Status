@@ -1,59 +1,54 @@
-"use strict"
+export default function statusPage(ui, fetch) {
+  // ISSUE: UI should show registration in progress;
+  // likewise other listeners.
+  ui.registerButton.addEventListener('click', () => {
+    console.log('register button pressed');
 
-window.addEventListener("DOMContentLoaded", () => {
-
-  var nameBox = document.getElementById("name")
-  var registerButton = document.getElementById("register")
-  var newStatusBox = document.getElementById("new-status")
-  var setStatusButton = document.getElementById("set-status")
-
-  var friendBox = document.getElementById("friend-name")
-  var checkButton = document.getElementById("check-status")
-  var friendStatusP = document.getElementById("friend-status")
-
-
-
-  registerButton.addEventListener("click", () => {
-    console.log("register button pressed")
-
-    $.ajax({
-      // Kinda hacky way to transmit data.
-      // Not sure why this gets encoded properly, but it does :)
-      url: "/register?name=" + nameBox.value,
-      type: "POST"
-    }).done( res => {
-      console.log("response was: ", res)
-    })
-  })
+    // ISSUE: URLs should be nouns, not verbs
+    // likewise /set, /check below
+    fetch(urlEncode`/register?name=${ui.nameBox.value}`, { method: 'POST' })
+      .done((res) => {
+        console.log('response was: ', res);
+      });
+  });
 
 
-  checkButton.addEventListener("click", () => {
-    var userName = friendBox.value
-    console.log("Checking status for " + userName)
+  ui.checkButton.addEventListener('click', () => {
+    const userName = ui.friendBox.value;
+    console.log('Checking status for ', userName);
 
-    $.ajax({
-      url: "/check?name=" + userName,
-      type: "POST"
-    }).done( result => {
-      console.log("response was: ", result)
-      friendStatusP.innerHTML = result
-    })
-  })
-
+    // ISSUE: should be GET
+    fetch(urlEncode`/check?name=${userName}`, { method: 'POST' })
+      .done((result) => {
+        console.log('response was: ', result);
+        ui.friendStatusP.textContent = result; // eslint-disable-line no-param-reassign
+      });
+  });
 
 
-  setStatusButton.addEventListener("click", () => {
-    var newStatus = newStatusBox.value
-    var userName = nameBox.value
+  ui.setStatusButton.addEventListener('click', () => {
+    const newStatus = ui.newStatusBox.value;
+    const userName = ui.nameBox.value;
 
-    var url = `/set?name=${userName}&status=${newStatus}`
-    console.log(url)
+    const url = urlEncode`/set?name=${userName}&status=${newStatus}`;
+    console.log(url);
 
-    $.ajax({
-      url: url,
-      type: "POST"
-    }).done( result => {
-      console.log("response was: ", result)
-    })
-  })
-})
+    fetch(url, { method: 'POST' })
+      .done((result) => {
+        console.log('response was: ', result);
+      });
+  });
+}
+
+
+function urlEncode(template, ...subs) {
+  const encoded = subs.map(encodeURIComponent);
+
+  const out = [];
+  template.forEach((part, ix) => {
+    out.push(part);
+    out.push(encoded[ix]);
+  });
+
+  return out.join('');
+}
