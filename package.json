@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "fresh": "rm -rf .rnode/rspace .rnode/casper-block-store && rnode run --data_dir .rnode",
     "deploy-contract": "rnode deploy --from 0x0 --nonce 0 --phlo-limit 0 --phlo-price 0 status.rho && rnode propose",
-    "start": "node ."
+    "start": "node main.js"
   },
   "repository": {
     "type": "git",
