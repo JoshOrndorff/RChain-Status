@@ -69,12 +69,12 @@ function checkHandler(deploy, myNode, random) {
       .then(_ => myNode.listenForDataAtName(ack)) // Get the data from the node
       .then((blockResults) => {
         if (blockResults.length === 0) {
-          res.status(404).send('No data found');
+          res.status(404).send({ message: 'No data found' });
           return;
         }
         const lastBlock = blockResults.slice(-1).pop();
         const lastDatum = lastBlock.postBlockData.slice(-1).pop();
-        res.send(RHOCore.toRholang(lastDatum));
+        res.status(200).send({ status: RHOCore.toRholang(lastDatum) });
       }).catch(oops => bail(res, oops));
   };
 }

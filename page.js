@@ -1,5 +1,6 @@
 export default function statusPage(ui, fetch) {
   const getName = () => ui.nameBox.value;
+  const friendName = () => ui.friendBox.value;
 
   remoteAction(
     ui.registerButton,
@@ -7,10 +8,19 @@ export default function statusPage(ui, fetch) {
     () => `register ${getName()}`,
   );
 
+  // Assigning things to the DOM is the norm.
+  // hm... move effects to index.html?
+  /* eslint-disable no-param-reassign */
   remoteAction(
     ui.checkButton,
-    () => fetch(urlEncode`/users/${getName()}/status`),
-    () => `get status for ${getName()}`,
+    () => fetch(urlEncode`/users/${friendName()}/status`)
+      .then((res) => {
+        res.json().then((info) => {
+          ui.friendStatusP.textContent = info.status;
+        });
+        return res;
+      }),
+    () => `get status for ${friendName()}`,
   );
 
   remoteAction(
@@ -30,7 +40,6 @@ export default function statusPage(ui, fetch) {
   function remoteAction(button, action, label) {
     button.addEventListener('click', () => {
       console.log(`${label()} button pressed`);
-      /* eslint-disable no-param-reassign */
       button.disabled = true;
 
       action()
