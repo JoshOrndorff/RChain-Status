@@ -14,7 +14,7 @@ function main(argv, { grpc, express, clock, random }) {
   app.use(express.static(__dirname));
 
   const deploy = code => myNode
-    .doDeploy({ code, timestamp: clock.valueOf() })
+    .doDeploy({ term: code, timestamp: clock().valueOf() })
     .then(_ => myNode.createBlock());
 
   app.post('/register', registerHandler(deploy));
