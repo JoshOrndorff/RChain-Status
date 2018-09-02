@@ -48,7 +48,7 @@ function registerHandler(deploy) {
     const nameExpr = strLit(req.params.name);
 
     // TODO: use a non-trivial return channel and wait for results there.
-    deploy(`@'register'!(${nameExpr}, Nil)`)
+    deploy(`@"register"!(${nameExpr}, Nil)`)
       .then((result) => {
         res.send(result);
       }).catch(oops => bail(res, oops));
