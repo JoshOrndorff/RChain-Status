@@ -1,56 +1,58 @@
 export default function statusPage(ui, fetch) {
-  // ISSUE: UI should show registration in progress;
-  // likewise other listeners.
-  ui.registerButton.addEventListener('click', () => {
-    console.log('register button pressed');
+  const getName = () => ui.nameBox.value;
 
-    /* eslint-disable no-param-reassign */
-    ui.registerButton.disabled = true;
+  remoteAction(
+    ui.registerButton,
+    () => fetch(urlEncode`/users/${getName()}`, { method: 'POST' }),
+    () => `register ${getName()}`,
+  );
 
-    const name = ui.nameBox.value;
-    fetch(urlEncode`/users/${name}`, { method: 'POST' })
-      .then((res) => {
-        ui.registerButton.disabled = false;
-        console.log('response was: ', res);
-        if (!res.ok) {
-          res.json().then(oops => showProblem(`failed to register ${name}: ${oops.message}`));
-          return;
-        }
-        ui.problem.hidden = true;
-      })
-      .catch(oops => showProblem(oops.message));
-  });
+  remoteAction(
+    ui.checkButton,
+    () => fetch(urlEncode`/users/${getName()}/status`),
+    () => `get status for ${getName()}`,
+  );
 
-  function showProblem(message) {
-    ui.registerButton.disabled = false;
-    ui.problem.textContent = message;
-    ui.problem.hidden = false;
+  remoteAction(
+    ui.setStatusButton,
+    () => fetch(
+      urlEncode`/users/${getName()}?status=${ui.newStatusBox.value}`,
+      { method: 'POST' },
+    ),
+    () => `set status for ${getName()}`,
+  );
+
+  /**
+   * Attach remote action to button.
+   * On click, disable the button, do the action, enable the button,
+   * and, in case of error, show the message.
+   */
+  function remoteAction(button, action, label) {
+    button.addEventListener('click', () => {
+      console.log(`${label()} button pressed`);
+      /* eslint-disable no-param-reassign */
+      button.disabled = true;
+
+      action()
+        .then((res) => {
+          button.disabled = false;
+          console.log('response was: ', res);
+          if (!res.ok) {
+            res.json().then(oops => showProblem(`failed to ${label()}: ${oops.message}`));
+            return res;
+          }
+          ui.problem.hidden = true;
+          return res;
+        })
+        .catch(oops => showProblem(oops.message));
+    });
+
+    function showProblem(message) {
+      button.disabled = false;
+      ui.problem.textContent = message;
+      ui.problem.hidden = false;
+    }
   }
-
-  ui.checkButton.addEventListener('click', () => {
-    const userName = ui.friendBox.value;
-    console.log('Checking status for ', userName);
-
-    fetch(urlEncode`/users/${userName}/status`)
-      .done((result) => {
-        console.log('response was: ', result);
-        ui.friendStatusP.textContent = result;
-      });
-  });
-
-
-  ui.setStatusButton.addEventListener('click', () => {
-    const newStatus = ui.newStatusBox.value;
-    const userName = ui.nameBox.value;
-
-    const url = urlEncode`/users/${userName}?status=${newStatus}`;
-    console.log(url);
-
-    fetch(url, { method: 'POST' })
-      .done((result) => {
-        console.log('response was: ', result);
-      });
-  });
 }
 
 
