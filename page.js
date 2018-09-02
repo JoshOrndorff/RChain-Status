@@ -8,15 +8,12 @@ export default function statusPage(ui, fetch) {
     () => `register ${getName()}`,
   );
 
-  // Assigning things to the DOM is the norm.
-  // hm... move effects to index.html?
-  /* eslint-disable no-param-reassign */
   remoteAction(
     ui.checkButton,
     () => fetch(urlEncode`/users/${friendName()}/status`)
       .then((res) => {
-        res.json().then((info) => {
-          ui.friendStatusP.textContent = info.status;
+        res.json().then(({ status }) => {
+          ui.showText(ui.friendStatusP, status);
         });
         return res;
       }),
@@ -40,27 +37,23 @@ export default function statusPage(ui, fetch) {
   function remoteAction(button, action, label) {
     button.addEventListener('click', () => {
       console.log(`${label()} button pressed`);
-      button.disabled = true;
+      ui.disable(button);
 
       action()
         .then((res) => {
-          button.disabled = false;
           console.log('response was: ', res);
-          if (!res.ok) {
-            res.json().then(oops => showProblem(`failed to ${label()}: ${oops.message}`));
-            return res;
+          if (res.ok) {
+            ui.hide(ui.problem);
+          } else {
+            res.json().then((oops) => {
+              ui.showText(ui.problem, `failed to ${label()}: ${oops.message}`);
+            });
           }
-          ui.problem.hidden = true;
           return res;
         })
-        .catch(oops => showProblem(oops.message));
+        .catch(oops => ui.showText(ui.problem, oops.message))
+        .finally(_ => ui.enable(button));
     });
-
-    function showProblem(message) {
-      button.disabled = false;
-      ui.problem.textContent = message;
-      ui.problem.hidden = false;
-    }
   }
 }
 
