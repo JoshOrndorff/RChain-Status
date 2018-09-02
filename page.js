@@ -16,7 +16,7 @@ export default function statusPage(ui, fetch) {
   remoteAction(
     ui.setStatusButton,
     () => fetch(
-      urlEncode`/users/${getName()}?status=${ui.newStatusBox.value}`,
+      urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}`,
       { method: 'POST' },
     ),
     () => `set status for ${getName()}`,

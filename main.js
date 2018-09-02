@@ -19,7 +19,7 @@ function main(argv, { grpc, express, clock, random }) {
 
   app.post('/users/:name', registerHandler(deploy));
   app.get('/users/:name/status', checkHandler(deploy, myNode, random));
-  app.post('/users/:name', setHandler(deploy));
+  app.post('/users/:name/status', setHandler(deploy));
 
   app.listen(uiPort, () => {
     console.log('RChain status dapp started.');
@@ -86,6 +86,8 @@ function setHandler(deploy) {
       name: strLit(req.params.name),
       status: strLit(req.query.status),
     };
+
+    console.log('set:', info);
 
     deploy(`@[${info.name}, "newStatus"]!(${info.status}, "ack")`)
       .then(() => {
