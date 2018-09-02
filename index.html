@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <title>Electron GRPC test</title>
+    <style>
+      #problem { color: red }
+    </style>
   </head>
   <body>
     <h1>Setup</h1>
@@ -25,6 +28,8 @@
     <button id="check-status">Check</button>
     <p>Your friend's status is: <span id="friend-status"></p>
 
+    <p id="problem"></p>
+
 <script type="module">
 import statusPage from './page.js';
 window.addEventListener("DOMContentLoaded", () => {
@@ -38,6 +43,7 @@ window.addEventListener("DOMContentLoaded", () => {
     checkButton: byId("check-status"),
     friendStatusP: byId("friend-status"),
     proposeButton: byId("propose"),
+    problem: byId("problem"),
   };
   statusPage(ui, fetch);
 });

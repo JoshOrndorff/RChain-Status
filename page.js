@@ -4,24 +4,37 @@ export default function statusPage(ui, fetch) {
   ui.registerButton.addEventListener('click', () => {
     console.log('register button pressed');
 
-    // ISSUE: URLs should be nouns, not verbs
-    // likewise /set, /check below
-    fetch(urlEncode`/register?name=${ui.nameBox.value}`, { method: 'POST' })
-      .done((res) => {
+    /* eslint-disable no-param-reassign */
+    ui.registerButton.disabled = true;
+
+    const name = ui.nameBox.value;
+    fetch(urlEncode`/users/${name}`, { method: 'POST' })
+      .then((res) => {
+        ui.registerButton.disabled = false;
         console.log('response was: ', res);
-      });
+        if (!res.ok) {
+          res.json().then(oops => showProblem(`failed to register ${name}: ${oops.message}`));
+          return;
+        }
+        ui.problem.hidden = true;
+      })
+      .catch(oops => showProblem(oops.message));
   });
 
+  function showProblem(message) {
+    ui.registerButton.disabled = false;
+    ui.problem.textContent = message;
+    ui.problem.hidden = false;
+  }
 
   ui.checkButton.addEventListener('click', () => {
     const userName = ui.friendBox.value;
     console.log('Checking status for ', userName);
 
-    // ISSUE: should be GET
-    fetch(urlEncode`/check?name=${userName}`, { method: 'POST' })
+    fetch(urlEncode`/users/${userName}/status`)
       .done((result) => {
         console.log('response was: ', result);
-        ui.friendStatusP.textContent = result; // eslint-disable-line no-param-reassign
+        ui.friendStatusP.textContent = result;
       });
   });
 
@@ -30,7 +43,7 @@ export default function statusPage(ui, fetch) {
     const newStatus = ui.newStatusBox.value;
     const userName = ui.nameBox.value;
 
-    const url = urlEncode`/set?name=${userName}&status=${newStatus}`;
+    const url = urlEncode`/users/${userName}?status=${newStatus}`;
     console.log(url);
 
     fetch(url, { method: 'POST' })

@@ -17,9 +17,9 @@ function main(argv, { grpc, express, clock, random }) {
     .doDeploy({ term: code, timestamp: clock().valueOf() })
     .then(_ => myNode.createBlock());
 
-  app.post('/register', registerHandler(deploy));
-  app.post('/check', checkHandler(deploy, myNode, random));
-  app.post('/set', setHandler(deploy));
+  app.post('/users/:name', registerHandler(deploy));
+  app.get('/users/:name/status', checkHandler(deploy, myNode, random));
+  app.post('/users/:name', setHandler(deploy));
 
   app.listen(uiPort, () => {
     console.log('RChain status dapp started.');
@@ -39,13 +39,13 @@ function strLit(txt) {
 
 function bail(res, oops) {
   console.log(oops);
-  res.status(500).send(JSON.stringify(oops));
+  res.status(500).send({ message: oops.message });
 }
 
 
 function registerHandler(deploy) {
   return (req, res) => {
-    const nameExpr = strLit(req.query.name);
+    const nameExpr = strLit(req.params.name);
 
     // TODO: use a non-trivial return channel and wait for results there.
     deploy(`@'register'!(${nameExpr}, Nil)`)
@@ -58,7 +58,7 @@ function registerHandler(deploy) {
 
 function checkHandler(deploy, myNode, random) {
   return (req, res) => {
-    const nameExpr = strLit(req.query.name);
+    const nameExpr = strLit(req.params.name);
 
     // Generate a public ack channel
     // TODO this should be unforgeable. Can I make one from JS?
@@ -83,7 +83,7 @@ function checkHandler(deploy, myNode, random) {
 function setHandler(deploy) {
   return (req, res) => {
     const info = {
-      name: strLit(req.query.name),
+      name: strLit(req.params.name),
       status: strLit(req.query.status),
     };
 
