@@ -5,14 +5,19 @@
   </head>
   <body>
     <fieldset>
-      <div><label>Key label <input id="label" /></label></div>
-      <div><label>Key sekret <input id="sekret" /></label></div>
-      <button id="save">Save</button>
+      <legend>Signing Key</legend>
+      <div><label>Label: <input id="label" /></label></div>
+      <div><label>Password: <input id="password" type="password" /></label></div>
+      <button id="save">Generate and Save</button>
+      <hr />
+      <div><label>Public Key: <input id="pubKey" readonly="readonly" /></label></div>
     </fieldset>
     <div id="status"></div>
+<!-- issue: how to use nacl as a module from the browser? -->
+<script src="lib/nacl-fast.min.js"></script>
 <script type="module">
 import popup from './sigTool.js';
-popup(document, { chrome: window.chrome, browser: window.browser });
+popup(document, { chrome: window.chrome, browser: window.browser }, nacl);
 </script>
   </body>
 </html>
