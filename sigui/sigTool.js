@@ -1,8 +1,6 @@
 /* global unescape, encodeURIComponent */
 /* eslint-disable import/extensions */
 
-import { fromJSData, toByteArray, toRholang } from './RHOCore.js';
-
 const def = obj => Object.freeze(obj);
 const utf8 = s => Uint8Array.from(unescape(encodeURIComponent(s)));
 
@@ -32,7 +30,7 @@ export function options(document, ua, nacl) {
 }
 
 
-function uiParts(byId) {
+export function uiParts(byId) {
   /* Assigning to params is the norm for DOM stuff. */
   /* eslint-disable no-param-reassign */
 
@@ -56,7 +54,7 @@ function uiParts(byId) {
  *
  * [1]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
  */
-function localStorage({ browser, chrome }) {
+export function localStorage({ browser, chrome }) {
   return browser ? browser.storage.local : def({
     set: items => asPromise(chrome, callback => chrome.storage.local.set(items, callback)),
     get: key => asPromise(chrome, callback => chrome.storage.local.get(key, callback)),
@@ -64,41 +62,7 @@ function localStorage({ browser, chrome }) {
 }
 
 
-export function popup(document, ua, nacl) {
-  const byId = id => document.getElementById(id);
-  const { showPubKey, lose } = uiParts(byId);
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const tool = sigTool(localStorage(ua), nacl);
-    tool.getKey()
-      .then(showPubKey)
-      .catch(oops => lose('get key', oops));
-
-    byId('sign').addEventListener('click', (ev) => {
-      byId('status').textContent = '';
-
-      const data = JSON.parse(byId('data').value);
-      byId('rholang').textContent = toRholang(fromJSData(data));
-
-      tool.getKey()
-        .catch(oops => lose('get key', oops))
-        .then((signingKey) => {
-          const password = byId('password').value;
-          let sig = '';
-          try {
-            sig = tool.signData(data, signingKey, password);
-          } catch (oops) {
-            lose('sign data', oops);
-          }
-          byId('sig').value = sig;
-        });
-      ev.preventDefault();
-    });
-  });
-}
-
-
-function sigTool(local, nacl) {
+export function sigTool(local, nacl) {
   function getKey() {
     return local.get('signingKey').then(({ signingKey }) => signingKey);
   }
@@ -134,7 +98,7 @@ function sigTool(local, nacl) {
     return { cipherText, nonce };
   }
 
-  function signData(data, signingKey, password) {
+  function signMessage(message, signingKey, password) {
     const nonce = h2b(signingKey.secretKey.nonce);
     const box = h2b(signingKey.secretKey.cipherText);
     const secretKey = nacl.secretbox.open(box, nonce, passKey(password));
@@ -143,11 +107,10 @@ function sigTool(local, nacl) {
       throw new Error('bad password');
     }
 
-    const message = toByteArray(fromJSData(data));
     return b2h(nacl.sign.detached(message, secretKey));
   }
 
-  return def({ getKey, generate, signData });
+  return def({ getKey, generate, signMessage });
 }
 
 
