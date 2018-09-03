@@ -3,6 +3,9 @@
   "name": "RSigTool",
   "version": "0.1.0",
   "description": "RChain Signature Tool",
+  "permissions": [
+    "storage"
+  ],
   "icons": {
     "48": "icons/rchain.png"
   },
