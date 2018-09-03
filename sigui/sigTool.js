@@ -1,4 +1,7 @@
 /* global unescape, encodeURIComponent */
+/* eslint-disable import/extensions */
+
+import { fromJSData, toByteArray, toRholang } from './RHOCore.js';
 
 const def = obj => Object.freeze(obj);
 const utf8 = s => Uint8Array.from(unescape(encodeURIComponent(s)));
@@ -73,7 +76,10 @@ export function popup(document, ua, nacl) {
 
     byId('sign').addEventListener('click', (ev) => {
       byId('status').textContent = '';
+
       const data = JSON.parse(byId('data').value);
+      byId('rholang').textContent = toRholang(fromJSData(data));
+
       tool.getKey()
         .catch(oops => lose('get key', oops))
         .then((signingKey) => {
@@ -137,7 +143,7 @@ function sigTool(local, nacl) {
       throw new Error('bad password');
     }
 
-    const message = utf8(JSON.stringify(data));
+    const message = toByteArray(fromJSData(data));
     return b2h(nacl.sign.detached(message, secretKey));
   }
 
