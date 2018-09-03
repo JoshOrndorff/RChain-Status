@@ -10,6 +10,9 @@
       <button id="save">Save</button>
     </fieldset>
     <div id="status"></div>
-    <script src="sigTool.js"></script>
+<script type="module">
+import popup from './sigTool.js';
+popup(document, { chrome: window.chrome, browser: window.browser });
+</script>
   </body>
 </html>

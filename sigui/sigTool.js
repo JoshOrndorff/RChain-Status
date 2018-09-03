@@ -1,8 +1,28 @@
-function sigTool(document, local) {
+/**
+ * @param ext ref [compat][1]
+ * @param ext.chrome
+ *
+ * [1]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
+ */
+export default function popup(document, { chrome, browser }) {
   const byId = id => document.getElementById(id);
+  const noop = promise => promise;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    sigTool(
+      byId,
+      browser ? browser.storage.local : chrome.storage.local,
+      browser ? noop : asPromise,
+    );
+  });
+}
+
+function sigTool(byId, local, adapt) {
+  /* Assigning to params is the norm for DOM stuff. */
+  /* eslint-disable no-param-reassign */
 
   function save({ label, sekret }) {
-    asPromise(callback => local.set({ [label]: sekret }, callback))
+    adapt(callback => local.set({ [label]: sekret }, callback))
       .then(() => {
         console.log('saved:', { [label]: sekret });
         byId('status').textContent = JSON.stringify({ [label]: sekret });
@@ -10,21 +30,17 @@ function sigTool(document, local) {
       .catch((oops) => { console.log(oops); });
   }
 
-  function loaded() {
-    function getFormData() {
-      return {
-        label: byId('label').value,
-        sekret: byId('sekret').value,
-      };
-    }
-
-    byId('save').addEventListener('click', (ev) => {
-      save(getFormData());
-      ev.preventDefault();
-    });
+  function getFormData() {
+    return {
+      label: byId('label').value,
+      sekret: byId('sekret').value,
+    };
   }
 
-  document.addEventListener('DOMContentLoaded', loaded);
+  byId('save').addEventListener('click', (ev) => {
+    save(getFormData());
+    ev.preventDefault();
+  });
 }
 
 
@@ -54,15 +70,3 @@ function asPromise(calling) {
 
   return new Promise(executor);
 }
-
-
-/** ISSUE: ambient
-I'd much rather pass this authority explicitly from tool.html, adding
-
-  "content_security_policy": "script-src 'sha256-xbIV...='; object-src 'self'",
-
-I get:
-
-  ReferenceError: browser is not defined
-*/
-sigTool(document, chrome.storage.local);

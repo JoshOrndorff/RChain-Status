@@ -6,6 +6,7 @@
   "permissions": [
     "storage"
   ],
+  "content_security_policy": "script-src 'sha256-PeWY5DJQb4NK21rhqfZE25WIevBwgCqYE4NW93M2PLw='; object-src 'self'",
   "icons": {
     "48": "icons/rchain.png"
   },
