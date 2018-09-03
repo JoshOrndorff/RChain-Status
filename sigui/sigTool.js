@@ -4,32 +4,12 @@ const def = obj => Object.freeze(obj);
 const utf8 = s => Uint8Array.from(unescape(encodeURIComponent(s)));
 
 
-/**
- * @param ext ref [compat][1]
- * @param ext.chrome
- *
- * [1]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
- */
-export default function popup(document, { chrome, browser }, nacl) {
+export function options(document, ua, nacl) {
   const byId = id => document.getElementById(id);
-
-  const localStorage = browser ? browser.storage.local : def({
-    set: items => asPromise(chrome, callback => chrome.storage.local.set(items, callback)),
-    get: key => asPromise(chrome, callback => chrome.storage.local.get(key, callback)),
-  });
-
-  function showPubKey({ label, pubKey }) {
-    byId('label').value = label;
-    byId('pubKey').value = pubKey;
-  }
-
-  function lose(doing, exc) {
-    byId('status').textContent = `failed ${doing}: ${exc.message}`;
-    console.log(exc);
-  }
+  const { showPubKey, lose } = uiParts(byId);
 
   document.addEventListener('DOMContentLoaded', () => {
-    const tool = sigTool(localStorage, nacl);
+    const tool = sigTool(localStorage(ua), nacl);
     tool.getKey()
       .then(showPubKey)
       .catch(oops => lose('get key', oops));
@@ -45,13 +25,65 @@ export default function popup(document, { chrome, browser }, nacl) {
         .catch(oops => lose('generate key', oops));
       ev.preventDefault();
     });
+  });
+}
+
+
+function uiParts(byId) {
+  /* Assigning to params is the norm for DOM stuff. */
+  /* eslint-disable no-param-reassign */
+
+  function showPubKey({ label, pubKey }) {
+    byId('label').value = label;
+    byId('pubKey').value = pubKey;
+  }
+
+  function lose(doing, exc) {
+    byId('status').textContent = `failed ${doing}: ${exc.message}`;
+    console.log(exc);
+  }
+
+  return def({ showPubKey, lose });
+}
+
+
+/**
+ * @param ext ref [compat][1]
+ * @param ext.chrome
+ *
+ * [1]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
+ */
+function localStorage({ browser, chrome }) {
+  return browser ? browser.storage.local : def({
+    set: items => asPromise(chrome, callback => chrome.storage.local.set(items, callback)),
+    get: key => asPromise(chrome, callback => chrome.storage.local.get(key, callback)),
+  });
+}
+
+
+export function popup(document, ua, nacl) {
+  const byId = id => document.getElementById(id);
+  const { showPubKey, lose } = uiParts(byId);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tool = sigTool(localStorage(ua), nacl);
+    tool.getKey()
+      .then(showPubKey)
+      .catch(oops => lose('get key', oops));
 
     byId('sign').addEventListener('click', (ev) => {
+      byId('status').textContent = '';
       const data = JSON.parse(byId('data').value);
       tool.getKey()
         .catch(oops => lose('get key', oops))
         .then((signingKey) => {
-          const sig = tool.signData(data, signingKey, byId('password').value);
+          const password = byId('password').value;
+          let sig = '';
+          try {
+            sig = tool.signData(data, signingKey, password);
+          } catch (oops) {
+            lose('sign data', oops);
+          }
           byId('sig').value = sig;
         });
       ev.preventDefault();
@@ -61,9 +93,6 @@ export default function popup(document, { chrome, browser }, nacl) {
 
 
 function sigTool(local, nacl) {
-  /* Assigning to params is the norm for DOM stuff. */
-  /* eslint-disable no-param-reassign */
-
   function getKey() {
     return local.get('signingKey').then(({ signingKey }) => signingKey);
   }
