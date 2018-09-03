@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+  "name": "RSigTool",
+  "version": "0.1.0",
+  "description": "RChain Signature Tool",
+  "icons": {
+    "48": "icons/rchain.png"
+  },
+  "browser_action": {
+    "default_icon": "icons/rchain.png",
+    "default_title": "RChain Signature Tool",
+    "default_popup": "tool.html"
+  }
+}
