@@ -5,13 +5,25 @@
   </head>
   <body>
     <fieldset>
-      <legend>Signing Key</legend>
+      <legend>Key Management</legend>
       <div><label>Label: <input id="label" /></label></div>
       <div><label>Password: <input id="password" type="password" /></label></div>
       <button id="save">Generate and Save</button>
       <hr />
       <div><label>Public Key: <input id="pubKey" readonly="readonly" /></label></div>
     </fieldset>
+
+    <fieldset>
+      <legend>Signing</legend>
+      <div><label>Data:
+          <textarea id="data" rows="5" cols="15"></textarea>
+      </label></div>
+      <button id="sign">Sign</button>
+      <div><label>Signature:
+          <textarea id="sig" rows="5" cols="15" readonly="readonly"></textarea>
+      </label></div>
+    </fieldset>
+
     <div id="status"></div>
 <!-- issue: how to use nacl as a module from the browser? -->
 <script src="lib/nacl-fast.min.js"></script>

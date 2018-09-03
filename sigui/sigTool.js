@@ -1,4 +1,8 @@
-/* global btoa, unescape, encodeURIComponent */
+/* global unescape, encodeURIComponent */
+
+const def = obj => Object.freeze(obj);
+const utf8 = s => Uint8Array.from(unescape(encodeURIComponent(s)));
+
 
 /**
  * @param ext ref [compat][1]
@@ -9,66 +13,108 @@
 export default function popup(document, { chrome, browser }, nacl) {
   const byId = id => document.getElementById(id);
 
-  const localStorage = browser ? browser.storage.local : {
+  const localStorage = browser ? browser.storage.local : def({
     set: items => asPromise(chrome, callback => chrome.storage.local.set(items, callback)),
     get: key => asPromise(chrome, callback => chrome.storage.local.get(key, callback)),
-  };
+  });
+
+  function showPubKey({ label, pubKey }) {
+    byId('label').value = label;
+    byId('pubKey').value = pubKey;
+  }
+
+  function lose(doing, exc) {
+    byId('status').textContent = `failed ${doing}: ${exc.message}`;
+    console.log(exc);
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
-    sigTool(byId, localStorage, nacl);
+    const tool = sigTool(localStorage, nacl);
+    tool.getKey()
+      .then(showPubKey)
+      .catch(oops => lose('get key', oops));
+
+    byId('save').addEventListener('click', (ev) => {
+      byId('status').textContent = '';
+
+      tool.generate({
+        label: byId('label').value,
+        password: byId('password').value,
+      })
+        .then(showPubKey)
+        .catch(oops => lose('generate key', oops));
+      ev.preventDefault();
+    });
+
+    byId('sign').addEventListener('click', (ev) => {
+      const data = JSON.parse(byId('data').value);
+      tool.getKey()
+        .catch(oops => lose('get key', oops))
+        .then((signingKey) => {
+          const sig = tool.signData(data, signingKey, byId('password').value);
+          byId('sig').value = sig;
+        });
+      ev.preventDefault();
+    });
   });
 }
 
 
-function sigTool(byId, local, nacl) {
+function sigTool(local, nacl) {
   /* Assigning to params is the norm for DOM stuff. */
   /* eslint-disable no-param-reassign */
 
-  function getFormData() {
+  function getKey() {
+    return local.get('signingKey').then(({ signingKey }) => signingKey);
+  }
+
+  function generate({ label, password }) {
+    const signingKey = encryptedKey(nacl.sign.keyPair(), { label, password });
+    return local.set({ signingKey }).then(() => signingKey);
+  }
+
+  function encryptedKey(keyPair, { label, password }) {
+    const sk = encryptWithNonce(keyPair.secretKey, passKey(password));
+
     return {
-      label: byId('label').value,
-      password: byId('password').value,
+      label,
+      secretKey: {
+        nonce: b2h(sk.nonce),
+        cipherText: b2h(sk.cipherText),
+      },
+      pubKey: b2h(keyPair.publicKey),
     };
   }
 
-  function showPubKey(signingKey) {
-    byId('label').value = signingKey.label;
-    byId('pubKey').value = signingKey.pubKey;
+  /**
+   * Hash text password to get bytes for secretbox key.
+   */
+  function passKey(password) {
+    return nacl.hash(utf8(password)).slice(0, nacl.secretbox.keyLength);
   }
 
-  byId('save').addEventListener('click', (ev) => {
-    byId('status').textContent = '';
-    const signingKey = generate(getFormData(), nacl);
-    showPubKey(signingKey);
-    local.set({ signingKey })
-      .catch((oops) => {
-        byId('status').textContent = `failed to save key: ${oops.message}`;
-        console.log(oops);
-      });
+  function encryptWithNonce(message, key) {
+    const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+    const cipherText = nacl.secretbox(message, nonce, key);
+    return { cipherText, nonce };
+  }
 
-    ev.preventDefault();
-  });
+  function signData(data, signingKey, password) {
+    const nonce = h2b(signingKey.secretKey.nonce);
+    const box = h2b(signingKey.secretKey.cipherText);
+    const secretKey = nacl.secretbox.open(box, nonce, passKey(password));
 
-  local.get('signingKey')
-    .then(item => showPubKey(item.signingKey))
-    .catch((oops) => { console.log('failed to get signingKey:', oops); });
+    if (!secretKey) {
+      throw new Error('bad password');
+    }
+
+    const message = utf8(JSON.stringify(data));
+    return b2h(nacl.sign.detached(message, secretKey));
+  }
+
+  return def({ getKey, generate, signData });
 }
 
-
-function generate({ label, password }, nacl) {
-  const utf8 = s => Uint8Array.from(unescape(encodeURIComponent(s)));
-  const storeKey = nacl.hash(utf8(password)).slice(0, nacl.secretbox.keyLength);
-  const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-  const newKeyPair = nacl.sign.keyPair();
-  const encryptedKey = nacl.secretbox(newKeyPair.secretKey, nonce, storeKey);
-
-  return {
-    label,
-    nonce: btoa(nonce),
-    encryptedKey: btoa(encryptedKey),
-    pubKey: btoa(newKeyPair.publicKey),
-  };
-}
 
 /**
  * Adapt callback-style API using Promises.
@@ -96,4 +142,35 @@ function asPromise(chrome, calling) {
   }
 
   return new Promise(executor);
+}
+
+
+// ack: https://gist.github.com/tauzen/3d18825ae41ff3fc8981
+function b2h(uint8arr) {
+  if (!uint8arr) {
+    return '';
+  }
+
+  let hexStr = '';
+  for (let i = 0; i < uint8arr.length; i += 1) {
+    let hex = (uint8arr[i] & 0xff).toString(16); // eslint-disable-line no-bitwise
+    hex = (hex.length === 1) ? `0${hex}` : hex;
+    hexStr += hex;
+  }
+
+  return hexStr;
+}
+
+
+function h2b(str) {
+  if (!str) {
+    return new Uint8Array();
+  }
+
+  const a = [];
+  for (let i = 0, len = str.length; i < len; i += 2) {
+    a.push(parseInt(str.substr(i, 2), 16));
+  }
+
+  return new Uint8Array(a);
 }
