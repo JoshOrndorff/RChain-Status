@@ -17,6 +17,8 @@ function startRelay(document, window, chrome) {
       if (msg.offer) {
         console.log('pageRelay: relaying offer to sign:', { msg, origin: window.origin });
         window.postMessage({ type: THE_TOKEN, offer: true }, window.origin);
+      } else if ('success' in msg) {
+        window.postMessage({ type: THE_TOKEN, ...msg }, window.origin);
       }
     });
   });

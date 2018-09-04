@@ -10,19 +10,24 @@ export default function statusPage(ui, fetch) {
   });
 
   window.addEventListener('message', (event) => {
-    if (event.data.type !== THE_TOKEN || !event.data.offer) { return; }
-    console.log('statusPage: got offer to sign:', { data: event.data, toSign });
+    if (event.data.type !== THE_TOKEN) { return; }
+    if (event.data.offer) {
+      console.log('statusPage: got offer to sign:', { data: event.data, toSign });
 
-    if (!toSign) { return; }
+      if (!toSign) { return; }
 
-    console.log('register: sending', { toSign });
-    window.postMessage({
-      type: THE_TOKEN,
-      payload: toSign,
-      // ISSUE: receive results by message as well.
-      errorId: 'problem',
-      signatureId: 'signature',
-    }, '*');
+      console.log('register: sending', { toSign });
+      window.postMessage({
+        type: THE_TOKEN,
+        payload: toSign,
+      }, '*');
+    } else if ('success' in event.data) {
+      if (event.data.success) {
+        ui.showText(ui.signature, event.data.signature);
+      } else {
+        ui.showText(ui.problem, event.data.message);
+      }
+    }
   });
 
   /*@@@@
