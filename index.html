@@ -97,7 +97,9 @@
 import statusPage from './page.js';
 window.addEventListener("DOMContentLoaded", () => {
   const byId = id => document.getElementById(id);
-  const ui = {
+  const def = obj => Object.freeze(obj);
+
+  const ui = def({
     nameBox: byId("name"),
     registerButton: byId("register"),
     newStatusBox: byId("new-status"),
@@ -112,8 +114,12 @@ window.addEventListener("DOMContentLoaded", () => {
     showText: (elt, txt) => { elt.textContent = txt; elt.hidden = false; },
     enable: (button) => { button.disabled = false; },
     disable: (button) => { button.disabled = true; },
-  };
-  statusPage(ui, fetch);
+  });
+  const port = def({
+    onmessage: (handler) => { window.onmessage = handler; },
+    postMessage: (...args) => window.postMessage(...args),
+  });
+  statusPage(ui, port, fetch);
 });
 </script>
 <script>

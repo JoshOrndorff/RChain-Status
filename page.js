@@ -1,4 +1,4 @@
-export default function statusPage(ui, fetch) {
+export default function statusPage(ui, fetch, port) {
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
   const THE_TOKEN = 'rchain.coop/6kbIdoB2';
@@ -9,7 +9,7 @@ export default function statusPage(ui, fetch) {
     console.log('register:', { toSign });
   });
 
-  window.addEventListener('message', (event) => {
+  port.onmessage((event) => {
     if (event.data.type !== THE_TOKEN) { return; }
     if (event.data.offer) {
       console.log('statusPage: got offer to sign:', { data: event.data, toSign });
@@ -17,7 +17,7 @@ export default function statusPage(ui, fetch) {
       if (!toSign) { return; }
 
       console.log('register: sending', { toSign });
-      window.postMessage({
+      port.postMessage({
         type: THE_TOKEN,
         payload: toSign,
       }, '*');
