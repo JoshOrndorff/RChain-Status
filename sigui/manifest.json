@@ -19,10 +19,6 @@
   "options_ui": {
     "page": "options.html"
   },
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": true
-  },
   "content_scripts": [
     {
       "js": ["pageRelay.js"],
