@@ -1,176 +1,96 @@
-new stdout(`rho:io:stdout`), stdoutAck(`rho:io:stdoutAck`) in {
+new sigVerify in {
+
   /**
-   * Users register by supplying a return channel. Contract returns
-   * an unforgeable OCap called the "control panel" for updating status.
+   * Wrapper around ed25519Verify. Rather than returning bool on a single
+   * ack channel, send ack on exactly one of success or failure channels
    */
-  contract @"register"(controlPanel, return) = {
-    stdout!("in  register") |
-    new status in {
-
-      // Set the initial default status
-      status!("I'm new here! Haven't posted anything yet")
-      |
-
-      /**
-       * Control panel OCap has a method  to set a new status
-       * @param newStatus The new status (a string) that the user is posting
-       * @param ack Just an acknowledgement channel
-       * @return Just an acknowledgement
-       */
-      contract @[*controlPanel, "newStatus"](@newStatus, ack) = {
-        // Account deletion is permanent (see below) because this
-        // receive will block indefinitely when account is deleted
-        stdout!("inside of newStatus") |
-        for (_ <- status){
-          stdout!("in newStatus: received status from state channel") |
-          status!(newStatus)
-          |
-          ack!(0)
-        }
-      }
-      |
-
-      /**
-       * Control panel OCap has a method to delete the account. Any account
-       * with no data on the status state channel is deleted.
-       * @return Just an acknowledgement
-       */
-      contract @[*controlPanel, "delete"](ack) = {
-        for (_ <- status){
-          ack!(0)
-        }
-      }
-      |
-
-      /**
-       * Control panel OCap has a method for checking the status.
-       * This may eventually be useful for creating revokable forwarders for friends
-       * to follow your status, but the data will be onchain in the clear anyway,
-       * so maybe this isn't so useful.
-       * @param A return channel
-       * @return A string of the currently set status
-       * Check status (Useful for creating revokable forwarders)
-       */
-      contract@[*controlPanel, "check"](result) = {
-        stdout!("inside of check") |
-        for (@s <- status) {
-          stdout!("in check: received status from state channel") |
-          status!(s) |
-          result!(s)
-        }
-      }
-      |
-
-      /**
-       * Create revokable status checker capability for your friends.
-       * If they ever become frenemies, you can revoke their capability
-       * to follow you, but remember the data is on-chain in the clear,
-       * so maybe this isn't very useful
-       * @param A return channel
-       * @return
-       */
-      contract @[*controlPanel, "makeRevCheck"](result) = {
-        new active, check, kill in {
-          // Forwarder starts as active
-          active!(true) |
-
-          /**
-           * For friend to check status. Stops working once active contains false.
-           * @param return A return channel
-           * @return A string representing the current status
-           */
-          for (return <= check; @true <= active; @s <= status){
-            active!(true) |
-            status!(s) |
-            return!(s)
-          }
-          |
-
-          /**
-           * Account owner can kill the forwarder.
-           * @param ack A acknowledgement channel
-           * This one need not be persistent for because killing can only happen once.
-           * @return Just an acknowledgement
-           */
-          for (ack <- kill; _ <- active){
-            active!(false) |
-            ack!(0)
-          }
-          |
-
-          // Give the two OCaps back
-          result!(*check, *kill)
-        }
-      }
-      |
-
-      // Give back the control panel (even though user passed it in).
-      //TODO Why can't I send a write-only bundle here?
-      return!(*controlPanel)
+  contract sigVerify(@data, @signature, @pubKey, success, failure) = {
+    new goodSig in {
+      @"ed25519Verify"!(data, signature, pubKey, *goodSig)|
+      for (@true <- goodSig){success!(0)}|
+      for (@false <- goodSig){failure!("Invalid Signature")}
     }
   }
   |
 
-  //////////////
-  /// Integration test:
-  /// Story of Alice keeping her friends updated on her goings-on,
-  /// and Bob, her friend, who follows closely.
-  //////////////
-  new aliceCP, bob, ack in {
-    // She registers and awaits control panel in reply
-    stdout!("Alice Registering") |
-    @"register"!(*aliceCP, *ack) |
-    for (_ <- ack){
+  /**
+   * Users register by supplying a return channel. Contract returns
+   * an unforgeable OCap called the "control panel" for updating status.
+   * @param controlPanel a name on which the update and check contracts will be built
+   * @param pubKey The ed25519 public key of the user as a hex string
+   * @param signature ed25519 signature over controlPanel
+   * @return 0 for success, or a human-readable error message
+   */
+  contract @"register"(@controlPanel, @pubKey, @signature, return) = {
 
-      // She makes a status checker for her friend Bob
-      stdout!("Control Panel received, Alice making checker") |
-      @[*aliceCP, "makeRevCheck"]!(*ack) |
-      for (bobCheck, bobKill <- ack){
+    new goodSig in {
+      sigVerify!(controlPanel, pubKey.hexToBytes(), signature.hexToBytes(), *goodSig, *return)|
+      for (_ <- goodSig){
 
-        // And sends it over so he can follow her.
-        stdout!("Alice sending checker to Bob") |
-        bob!(*bobCheck) |
-        for (bobsOwnCheck <- bob){
+        new statusCh, pubKeyCh, nonceCh in {
+          // Send the ack
+          return!(0)|
 
-          // When Bob sees that he can check Alice's status, he does.
-          stdout!("Bob receiving checker from Alice") |
-          bobsOwnCheck!(*ack) |
-          for(@status <- ack) {
-            stdout!("Bob received status: " ++ status) |
+          // Set the initial default status
+          statusCh!("I'm new here! Haven't posted anything yet")|
+          pubKeyCh!(pubKey.hexToBytes())|
+          nonceCh!(0)|     // TODO should prolly have a checkNonce method in case user forgets it
 
-            // Alice updates her status
-            stdout!("Alice updating status") |
-            @[*aliceCP, "newStatus"]!("Having fun traveling in Europe!", *ack) |
-
-            for (_ <- ack) {
-
-              // Bob checks again
-              stdout!("Bob about to check again") |
-              bobsOwnCheck!(*ack) |
-              for(@status <- ack) {
-                stdout!("Bob received status: " ++ status) |
-
-                // Later she gets angry and revokes his reading capability
-                stdoutAck!("Alice revoking Bob's read cap", *ack) |
-                for(_ <- ack) {
-                  bobKill!(*ack) |
-
-                  for (_ <- ack) {
-
-                    // She continues to post
-                    @[*aliceCP, "newStatus"]!("Bob stinks. He should never see this on the screen", *ack) |
-
-                    for(_ <- ack) {
-                      stdout!("Alice successfully posted status") |
-                      // But Bob can't read anymore
-                      bobsOwnCheck!(*ack) |
-                      for(_ <- ack) {
-                        stdout!("If we get here something is wrong.")
-                      }
-                    }
-                  }
-                }
+          /**
+           * Control panel OCap has a method  to set a new status
+           * @param newStatus The new status (a string) that the user is posting
+           * @param signature ed25519 signature over [newStatus, nonce]
+           * @param ack Just an acknowledgement channel
+           * @return Just an acknowledgement
+           */
+          contract @[controlPanel, "newStatus"](@newStatus, @signature, ack) = {
+            // Account deletion is permanent (see below) because this
+            // receive will block indefinitely when account is deleted
+            for (@nonce <- nonceCh; @pubKey <- pubKeyCh){
+              nonceCh!(nonce + 1)|
+              pubKeyCh!(pubKey)|
+              sigVerify!([newStatus, nonce], signature, pubKey, *goodSig, *ack)|
+              for (_ <- goodSig; _ <- statusCh){
+                statusCh!(newStatus)|
+                ack!(0)
               }
+            }
+          }
+          |
+
+          /**
+           * Control panel OCap has a method to delete the account. Any account
+           * with no data on the status state channel is deleted.
+           * @param signature ed25519 signature over nonce
+           * @param ack Just an acknowledgement channel
+           */
+          contract @[controlPanel, "delete"](@signature, ack) = {
+            for (@nonce <- nonceCh; @pubKey <- pubKeyCh){
+              nonceCh!(nonce + 1)|
+              pubKeyCh!(pubKey)|
+              sigVerify!(nonce, signature, pubKey, *goodSig, *ack)|
+              for (_ <- goodSig; _ <- statusCh){
+                ack!(0)
+              }
+            }
+          }
+          |
+
+          /**
+           * Control panel OCap has a method for checking the status.
+           * This may eventually be useful for creating revokable forwarders for friends
+           * to follow your status, but the data will be onchain in the clear anyway,
+           * so maybe this isn't so useful.
+           * @param A return channel
+           * @return A string of the currently set status
+           * Check status (Useful for creating revokable forwarders)
+           */
+          contract@[controlPanel, "check"](result) = {
+
+            for (@s <- statusCh) {
+
+              statusCh!(s) |
+              result!(s)
             }
           }
         }
