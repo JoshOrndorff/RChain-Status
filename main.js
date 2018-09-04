@@ -23,8 +23,8 @@ function main(argv, { grpc, express, clock, random }) {
 
   app.listen(uiPort, () => {
     console.log('RChain status dapp started.');
-    console.log(`Connected to RNode at ${host}:${port}.`);
-    console.log(`Userinterface on port ${uiPort}`);
+    console.log(`Using ${host}:${port} to contact RNode.`);
+    console.log(`User interface on port ${uiPort}`);
   });
 }
 
