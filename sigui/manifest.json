@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "RChain Signature Tool",
   "permissions": [
+    "tabs",
     "storage"
   ],
   "content_security_policy": "script-src 'sha256-Gp8qzAEa4f8ZZmOl9AS/95VWxhcCwMvF94kA5zcleDI='     'sha256-Hz9yZDms4xPfakPLKRjfqrXp0US15kKGjEbhG8is1CY='; object-src 'self'",

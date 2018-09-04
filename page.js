@@ -1,12 +1,37 @@
 export default function statusPage(ui, fetch) {
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
+  const THE_TOKEN = 'rchain.coop/6kbIdoB2';
+  let toSign = null;
 
+  ui.registerButton.addEventListener('click', () => {
+    toSign = ['register', { name: getName() }];
+    console.log('register:', { toSign });
+  });
+
+  window.addEventListener('message', (event) => {
+    if (event.data.type !== THE_TOKEN || !event.data.offer) { return; }
+    console.log('statusPage: got offer to sign:', { data: event.data, toSign });
+
+    if (!toSign) { return; }
+
+    console.log('register: sending', { toSign });
+    window.postMessage({
+      type: THE_TOKEN,
+      payload: toSign,
+      // ISSUE: receive results by message as well.
+      errorId: 'problem',
+      signatureId: 'signature',
+    }, '*');
+  });
+
+  /*@@@@
   remoteAction(
     ui.registerButton,
     () => fetch(urlEncode`/users/${getName()}`, { method: 'POST' }),
     () => `register ${getName()}`,
   );
+  */
 
   remoteAction(
     ui.checkButton,
