@@ -32,7 +32,10 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
     if (!toSign) { return; }
     console.log('page requesting signature of', toSign);
     signer.invoke('requestSignature', [], toSign)
-      .then(({ signature }) => { ui.showText(ui.signature, signature); })
+      .then(({ signature, pubKey }) => {
+        const withSig = [].concat(toSign, [{ signature, pubKey }]);
+        ui.signature.value = JSON.stringify(withSig);
+      })
       .catch((problem) => { ui.showText(ui.problem, problem.message); });
   }
 
@@ -64,7 +67,9 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
   });
 
   ui.registerButton.addEventListener('click', () => {
-    toSign = ['register', { name: getName() }];
+    if (ui.registerSign.checked) {
+      toSign = ['register', { name: getName() }];
+    }
   });
 
   remoteAction(
@@ -84,6 +89,12 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
       }),
     () => `get status for ${friendName()}`,
   );
+
+  ui.setStatusButton.addEventListener('click', () => {
+    if (ui.statusSign.checked) {
+      toSign = ['post', { name: getName(), status: ui.newStatusBox.value }];
+    }
+  });
 
   remoteAction(
     ui.setStatusButton,
