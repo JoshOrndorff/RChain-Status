@@ -1,14 +1,22 @@
-new sigVerify in {
+new debug(`rho:io:stdout`), sigVerify in {
 
   /**
    * Wrapper around ed25519Verify. Rather than returning bool on a single
    * ack channel, send ack on exactly one of success or failure channels
    */
   contract sigVerify(@data, @signature, @pubKey, success, failure) = {
+    debug!(["in verify wrapper", "data is", data, "sig is ", signature, "pubkey is", pubKey])|
     new goodSig in {
-      @"ed25519Verify"!(data, signature, pubKey, *goodSig)|
-      for (@true <- goodSig){success!(0)}|
-      for (@false <- goodSig){failure!("Invalid Signature")}
+      @"ed25519Verify"!(data.toByteArray(), signature.hexToBytes(), pubKey.hexToBytes(), *goodSig)|
+      for (@true <- goodSig){
+        success!(0)|
+        debug!("Successful signature verification")
+        }
+        |
+      for (@false <- goodSig){
+        failure!("Invalid Signature")|
+        debug!("Bad signature :(")
+      }
     }
   }
   |
@@ -21,19 +29,21 @@ new sigVerify in {
    * @param signature ed25519 signature over controlPanel
    * @return 0 for success, or a human-readable error message
    */
-  contract @"register"(@controlPanel, @signature, @pubKey, return) = {
+  contract @"register"(controlPanel, @signature, @pubKey, return) = {
 
     new goodSig in {
-      sigVerify!(controlPanel, signature.hexToBytes(), pubKey.hexToBytes(), *goodSig, *return)|
+      sigVerify!(*controlPanel, signature, pubKey, *goodSig, *return)|
       for (_ <- goodSig){
+        debug!("back in register, received ack from verify wrapper")|
+
+        // Send the ack
+        return!(0)|
 
         new statusCh, pubKeyCh, nonceCh in {
-          // Send the ack
-          return!(0)|
 
           // Set the initial default status
           statusCh!("I'm new here! Haven't posted anything yet")|
-          pubKeyCh!(pubKey.hexToBytes())|
+          pubKeyCh!(pubKey)|
           nonceCh!(0)|     // TODO should prolly have a checkNonce method in case user forgets it
 
           /**
@@ -43,16 +53,22 @@ new sigVerify in {
            * @param ack Just an acknowledgement channel
            * @return Just an acknowledgement
            */
-          contract @[controlPanel, "newStatus"](@newStatus, @signature, ack) = {
+          contract @[*controlPanel, "newStatus"](@newStatus, @signature, ack) = {
+            debug!("in the new status contract")|
+            debug!([{"newStatus": newStatus, "sig": signature}])|
             // Account deletion is permanent (see below) because this
             // receive will block indefinitely when account is deleted
             for (@nonce <- nonceCh; @pubKey <- pubKeyCh){
+              debug!([{"correctNonce": nonce, "pubKey": pubKey}])|
               nonceCh!(nonce + 1)|
               pubKeyCh!(pubKey)|
               sigVerify!([newStatus, nonce], signature, pubKey, *goodSig, *ack)|
-              for (_ <- goodSig; _ <- statusCh){
-                statusCh!(newStatus)|
-                ack!(0)
+              for (_ <- goodSig){
+                debug!("got good sig ack while setting new status")|
+                for (_ <- statusCh){
+                  statusCh!(newStatus)|
+                  ack!(0)
+                }
               }
             }
           }
@@ -64,7 +80,7 @@ new sigVerify in {
            * @param signature ed25519 signature over nonce
            * @param ack Just an acknowledgement channel
            */
-          contract @[controlPanel, "delete"](@signature, ack) = {
+          contract @[*controlPanel, "delete"](@signature, ack) = {
             for (@nonce <- nonceCh; @pubKey <- pubKeyCh){
               nonceCh!(nonce + 1)|
               pubKeyCh!(pubKey)|
@@ -85,7 +101,7 @@ new sigVerify in {
            * @return A string of the currently set status
            * Check status (Useful for creating revokable forwarders)
            */
-          contract@[controlPanel, "check"](result) = {
+          contract@[*controlPanel, "check"](result) = {
 
             for (@s <- statusCh) {
 

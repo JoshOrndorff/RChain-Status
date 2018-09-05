@@ -22,6 +22,7 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
   let toSign = null;
+  let operation = null;
 
   // bus.attach(`${RCHAIN_SIGNING}/popup`, bus.makeProxy());
 
@@ -37,10 +38,18 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
       .then(({ signature, pubKey }) => {
         //const withSig = {"register": [getName(), pubKey, signature, "bogusReturnChan"]}//[].concat(toSign, [{ signature, pubKey }]);
 
-        // TODO make this better and move it to main.js
-        const rholangCode = `@"register"!(${JSON.stringify(getName())}, "${signature}", "${pubKey}", "bogusReturn")`
-        ui.signature.value = rholangCode;
-        fetch(urlEncode`/users/${getName()}?code=${rholangCode}`, { method: 'POST' })
+        if (operation === "register"){
+          // TODO make this better and move it to main.js
+          const rholangCode = `@"register"!(${JSON.stringify(getName())}, "${signature}", "${pubKey}", "bogusReturn")`
+          ui.signature.value = rholangCode;
+          fetch(urlEncode`/users/${getName()}?code=${rholangCode}`, { method: 'POST' })
+        }
+        else if (operation == "post"){
+          fetch(urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}&signature=${signature}`, { method: 'POST' })
+        }
+        else{
+          throw new TypeError("in offer. operation was neither register nor post");
+        }
       })
       .catch((problem) => { ui.showText(ui.problem, problem.message); });
   }
@@ -75,12 +84,27 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
   ui.registerButton.addEventListener('click', () => {
     if (ui.registerSign.checked) {
       toSign = getName();
+      operation = "register";
     }
     else {
       // Insecure register
       fetch(urlEncode`/users/${getName()}`, { method: 'POST' });
       // TODO make the button busy
       // TODO report status
+    }
+  });
+
+  ui.setStatusButton.addEventListener('click', () => {
+    if (ui.statusSign.checked) {
+      toSign = [ui.newStatusBox.value, parseInt(ui.nonceBox.value, 10)];
+      operation = "post";
+    }
+    else {
+      // Insecure post
+      fetch(
+        urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}`,
+        { method: 'POST' },
+      );
     }
   });
 
@@ -97,20 +121,6 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
     () => `get status for ${friendName()}`,
   );
 
-  ui.setStatusButton.addEventListener('click', () => {
-    if (ui.statusSign.checked) {
-      toSign = ['post', { name: getName(), status: ui.newStatusBox.value }];
-    }
-  });
-
-  remoteAction(
-    ui.setStatusButton,
-    () => fetch(
-      urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}`,
-      { method: 'POST' },
-    ),
-    () => `set status for ${getName()}`,
-  );
 
   /**
    * Attach remote action to button.

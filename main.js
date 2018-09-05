@@ -88,11 +88,16 @@ function setHandler(deploy) {
     const info = {
       name: strLit(req.params.name),
       status: strLit(req.query.status),
+      signature: strLit(req.query.signature)
     };
 
     console.log('set:', info);
 
-    deploy(`@[${info.name}, "newStatus"]!(${info.status}, "ack")`)
+    const rholangCode = (info.signature ?
+    `@[${info.name}, "newStatus"]!(${info.status}, ${info.signature}, "notUsingAck")` :
+    `@[${info.name}, "newStatus"]!(${info.status}, "notUsingAck")`);
+
+    deploy(rholangCode)
       .then(() => {
         res.send('Status updated successfully');
       }).catch(oops => bail(res, oops));

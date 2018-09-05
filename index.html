@@ -44,11 +44,15 @@
           </fieldset>
 
           <fieldset class="card">
+            <h2 class="card-title">Post Status</h2>
             <div class="input-group">
               <label class="input-group-addon addon-lg" for="name">Status:</label>
               <input id="new-status" type="text" class="form-input input-lg"/>
               <label class="input-group-addon">
                 <input type="checkbox" id="sign-status" />Signed?
+              </label>
+              <label class="input-group-addon">
+                nonce: <input type="text" id="nonce" />
               </label>
               <button id="set-status" class="btn btn-primary input-group-btn btn-lg">Post</button>
             </div>
@@ -115,6 +119,7 @@ window.addEventListener("DOMContentLoaded", () => {
     registerSign: byId("sign-register"),
     registerButton: byId("register"),
     newStatusBox: byId("new-status"),
+    nonceBox: byId("nonce"),
     setStatusButton: byId("set-status"),
     statusSign: byId("sign-status"),
     friendBox: byId("friend-name"),
