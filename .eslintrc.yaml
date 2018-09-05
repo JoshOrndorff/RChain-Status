@@ -9,6 +9,9 @@ rules:
     -
       argsIgnorePattern: "_.*"
       varsIgnorePattern: "_.*"
+  spaced-comment:
+    # conflicts with flow type annotation comments
+    - off
   no-console:
     - off
   no-use-before-define:
