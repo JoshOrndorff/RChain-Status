@@ -65,16 +65,13 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
 
   ui.registerButton.addEventListener('click', () => {
     toSign = ['register', { name: getName() }];
-    // console.log('register:', { toSign });
   });
 
-  /*@@@@
   remoteAction(
     ui.registerButton,
     () => fetch(urlEncode`/users/${getName()}`, { method: 'POST' }),
     () => `register ${getName()}`,
   );
-  */
 
   remoteAction(
     ui.checkButton,
