@@ -116,7 +116,7 @@ window.addEventListener("DOMContentLoaded", () => {
     disable: (button) => { button.disabled = true; },
   });
   const port = def({
-    listen: (handler) => { window.addEventListener('message', event => handler(event.data)); },
+    listen: (handler) => { window.onmessage = event => handler(event.data); },
     postMessage: (data) => window.postMessage(data, '*'),
   });
   statusPage(ui, port, fetch);

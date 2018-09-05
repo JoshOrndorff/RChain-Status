@@ -100,13 +100,16 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
         args: [],
       };
       const ignoreReply = () => null;
+      console.log('@@rhoSig sending', offerToSign.method, offerToSign);
       ua.chrome.tabs.sendMessage(tabs[0].id || 0, offerToSign, ignoreReply);
     });
 
     // ISSUE: flow-interfaces-chrome doesn't realize sendResponse takes an arg
     ua.chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      console.log('@@rhoSig received', msg);
       if (msg.target !== selfRef) { return undefined; }
       if (msg.method !== 'requestSignature') { return undefined; } // ISSUE: reply with error?
+      console.log('@@rhoSig received invoke self', msg.method);
 
       requestSignature(msg.refs || [], ...[].concat(msg.args))
         .then((sig) => {

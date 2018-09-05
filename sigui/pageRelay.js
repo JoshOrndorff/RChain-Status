@@ -17,20 +17,26 @@ function startRelay(runtime /*: typeof chrome.runtime*/, pgPort /*: BusPort*/) {
   runtime.onMessage.addListener((maybeMsg, _sender, _sendResponse) => {
     const msg = maybeMsg || {};
     if (msg.target !== `${RCHAIN_SIGNING}/page`) { return; }
-    pgPort.postMessage({
+    console.log('@@pageRelay got runtime message for page', maybeMsg.method, maybeMsg);
+    const pgInvoke /*: BusMessage */ = {
       kind: 'invoke',
       target: msg.target,
       method: msg.method || '',
       refs: msg.refs || [],
       args: msg.args || [],
-    });
+    };
+    console.log('@@pageRelay relaying', pgInvoke.method, pgInvoke);
+    pgPort.postMessage(pgInvoke);
     // issue: how to handle replies?
   });
 
   pgPort.listen((msg /*: BusMessage | BusReply*/) => {
-    if (msg.kind !== 'invoke') { return false; }
     if (msg.target !== `${RCHAIN_SIGNING}/popup`) { return false; }
+    console.log('@@pageRelay got page message for popup', msg);
+    if (msg.kind !== 'invoke') { return false; }
+    console.log('@@pageRelay sending to runtime', msg);
     runtime.sendMessage(msg, (response) => {
+      console.log('@@pageRelay forwarding reply from runtime', response);
       pgPort.postMessage(response);
     });
     return true;
@@ -41,5 +47,5 @@ function startRelay(runtime /*: typeof chrome.runtime*/, pgPort /*: BusPort*/) {
 /* eslint-disable no-undef*/
 startRelay(chrome.runtime, {
   postMessage: msg => window.postMessage(msg, '*'),
-  listen: cb => window.addEventListener('message', cb),
+  listen: cb => window.addEventListener('message', event => cb(event.data)),
 });

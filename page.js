@@ -22,6 +22,7 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
    * @param objs[0] - signer making the offer
    */
   function offer([signer]) {
+    console.log('@@page got offer to sign by', signer);
     if (!toSign) { return; }
     signer.invoke('requestSignature', [], toSign)
       .then(({ signature }) => { ui.showText(ui.signature, signature); })
@@ -30,11 +31,16 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
 
   let pending = null;
   port.listen((rx /*: BusMessage | BusReply */) => {
+
+    // It's a bit of a fib that we only get BusMessage | BusReply
+    if (!rx || !['invoke', 'success', 'failure'].includes(rx.kind)) { return false; }
+
+    console.log('@@page got message', rx);
     if (rx.kind === 'invoke') {
       if (rx.target !== `${RCHAIN_SIGNING}/page`) { return false; }
       if (rx.method !== 'offer') { return false; }
       const signer = def({
-        invoke: (verb, _refs, args) => {
+        invoke: (verb, _refs, ...args) => {
           const msg /*: BusMessage*/ = {
             kind: 'invoke',
             target: `${RCHAIN_SIGNING}/popup`,
@@ -45,6 +51,7 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
           const todo = new Promise((resolve, reject) => {
             pending = { resolve, reject };
           });
+          console.log('@@page signer invoke sending', msg);
           port.postMessage(msg);
           return todo;
         },
@@ -52,8 +59,10 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
       offer([signer]);
     } else if (pending) {
       if (rx.kind === 'success') {
+        console.log('@@page resolving signature promise.');
         pending.resolve({ signature: rx.result }); //@@@@
       } else {
+        console.log('@@page rejecting signature promise.');
         pending.reject(new Error(rx.message));
       }
     }
