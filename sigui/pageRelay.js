@@ -1,62 +1,71 @@
 // inspired by EIP 1102: Opt-in provider access
 // https://eips.ethereum.org/EIPS/eip-1102
 // https://github.com/MetaMask/metamask-extension/pull/4703
+
+const def = obj => Object.freeze(obj);
+
+// combination of rchain domain and randomly chosen data.
+const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
+
 function startRelay(document, window, chrome) {
-  const byId = id => document.getElementById(id);
+  let pageClient = null;
+  let signer = null;
 
-  // combination of rchain domain and randomly chosen data.
-  const THE_TOKEN = 'rchain.coop/6kbIdoB2';
-  let signingPort = null;
-  console.log('startRelay: initially no port.');
+  console.log('startRelay: initially no signer proxy.');
 
-  chrome.runtime.onConnect.addListener((port) => {
-    console.log('pageRelay port connected', port);
-    signingPort = port;
-
-    port.onMessage.addListener((msg) => {
-      if (msg.offer) {
-        console.log('pageRelay: relaying offer to sign:', { msg, origin: window.origin });
-        window.postMessage({ type: THE_TOKEN, offer: true }, window.origin);
-      } else if ('success' in msg) {
-        window.postMessage({ type: THE_TOKEN, ...msg }, window.origin);
+  chrome.runtime.onConnect.addListener((popupPort) => {
+    console.log('pageRelay port connected', popupPort);
+    pageClient = oneWayTarget(`${RCHAIN_SIGNING}/page`, window);
+    let count = 0;
+    popupPort.onMessage.addListener((msg) => {
+      console.log('pageRelay popupPort message', count++);
+      if (msg.target === `${RCHAIN_SIGNING}/page`) {
+        pageClient.receive(msg);
       }
     });
+    signer = crossBusForwarder(`${RCHAIN_SIGNING}/popup`, popupPort, window);
   });
 
-  // @return true if event is handled.
   window.addEventListener('message', (event) => {
-    if (event.source !== window) { return false; }
-    if (!event.data || !event.data.type || !event.data.type === THE_TOKEN) { return false; }
-    if (!event.data.payload) {
-      console.log('pageRelay: not a request to sign:', event.data);
-      return false;
-    }
-
-    function lose(message) {
-      byId(event.data.errorId).textContent = message;
-      return null;
-    }
-
-    console.log('pageRelay got THE_TOKEN', event.data);
-    if (!signingPort) {
-      return lose('no port; install and open RChain signer?');
-    }
-
-    console.log('pageRelay requesting signature of', event.data.payload, signingPort);
-    signingPort.postMessage(
-      { payload: event.data.payload },
-      ({ status, signature, message }) => {
-        console.log('pageRelay reponse:', { status, signature });
-        if (!status) {
-          return lose(message) || true;
-        }
-        byId(event.data.signatureId).textContent = signature;
-        return signature;
-      },
-    );
-
+    if (event.data.target !== `${RCHAIN_SIGNING}/popup`) { return false; }
+    if (!signer) { return true; }
+    signer.receive(event.data);
     return true;
   });
 }
 
-startRelay(document, window, chrome);
+
+function crossBusForwarder(targetId, targetPort, srcPort) {
+  let count = 0;
+
+  function receive({ method, refs, args }) {
+    let replyChan = new MessageChannel();
+    if (refs.length !== 0) {
+      throw new Error('not implemented: forwarding refs');
+    }
+    targetPort.postMessage({ target: targetId, method, args, refs: [] }, '*', [replyChan.port2]);
+    console.log('crossBus receive fwd', targetId, { method, refs, args });
+
+    replyChan.port1.onmessage = (event) => {
+      srcPort.postMessage(event.data, '*');
+      console.log('crossBus replyChan', count++, targetId, event.data.target, event.data.method, event.data.inReplyTo);
+      // ISSUE: garbage collect the channel?
+      replyChan = null;
+    };
+    return Promise.reject(new Error('only src gets to see result'));
+  }
+
+  return def({ receive });
+}
+
+function oneWayTarget(targetId, port) {
+  function receive({ method, refs, args }) {
+    port.postMessage({ target: targetId, method, refs, args }, '*');
+    console.log('oneWayTarget sent to', targetId, method);
+    return Promise.resolve(null);
+  }
+  return def({ receive });
+}
+
+
+startRelay(document, window, chrome); // eslint-disable-line no-undef

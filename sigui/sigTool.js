@@ -1,13 +1,39 @@
+// @flow
+
 /* global unescape, encodeURIComponent */
 /* eslint-disable import/extensions */
 
-const def = obj => Object.freeze(obj);
-const utf8 = s => Uint8Array.from(unescape(encodeURIComponent(s)));
+import def from './def.js';
+
+/*::
+export type UserAgent = {
+  chrome: typeof chrome,
+  browser: {
+    storage: {
+      local: StorageArea
+    }
+  }
+}
+
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage/StorageArea
+interface StorageArea {
+  get(key: string): Promise<Object>,
+  set(items: Object): Promise<void>
+}
+
+import type Nacl from './lib/nacl-fast.min.js';
+*/
 
 
-export function options(document, ua, nacl) {
-  const byId = id => document.getElementById(id);
-  const { showPubKey, lose } = uiParts(byId);
+export function options(document /*: Document*/, ua /*: UserAgent*/, nacl /*: Nacl*/) {
+  const die = (id) => { throw new Error(id); };
+  const byId = id => document.getElementById(id) || die(id);
+  const fieldById = id => ((byId(id) /*:any*/)/*: HTMLInputElement*/);
+
+  function lose(doing, exc) {
+    byId('status').textContent = `failed ${doing}: ${exc.message}`;
+    console.log(exc);
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     const tool = sigTool(localStorage(ua), nacl);
@@ -15,36 +41,25 @@ export function options(document, ua, nacl) {
       .then(showPubKey)
       .catch(oops => lose('get key', oops));
 
-    byId('save').addEventListener('click', (ev) => {
+    byId('save').addEventListener('click', () => {
       byId('status').textContent = '';
 
       tool.generate({
-        label: byId('label').value,
-        password: byId('password').value,
+        label: fieldById('label').value,
+        password: fieldById('password').value,
       })
         .then(showPubKey)
         .catch(oops => lose('generate key', oops));
-      ev.preventDefault();
     });
   });
-}
 
 
-export function uiParts(byId) {
-  /* Assigning to params is the norm for DOM stuff. */
-  /* eslint-disable no-param-reassign */
-
-  function showPubKey({ label, pubKey }) {
-    byId('label').value = label;
-    byId('pubKey').value = pubKey;
+  function showPubKey({ label, pubKey } /*: SigningKey*/) {
+    /* Assigning to params is the norm for DOM stuff. */
+    /* eslint-disable no-param-reassign */
+    fieldById('label').value = label;
+    fieldById('pubKey').value = pubKey;
   }
-
-  function lose(doing, exc) {
-    byId('status').textContent = `failed ${doing}: ${exc.message}`;
-    console.log(exc);
-  }
-
-  return def({ showPubKey, lose });
 }
 
 
@@ -54,7 +69,7 @@ export function uiParts(byId) {
  *
  * [1]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
  */
-export function localStorage({ browser, chrome }) {
+export function localStorage({ browser, chrome } /*: UserAgent*/) /*: StorageArea */{
   return browser ? browser.storage.local : def({
     set: items => asPromise(chrome, callback => chrome.storage.local.set(items, callback)),
     get: key => asPromise(chrome, callback => chrome.storage.local.get(key, callback)),
@@ -62,9 +77,29 @@ export function localStorage({ browser, chrome }) {
 }
 
 
-export function sigTool(local, nacl) {
-  function getKey() {
-    return local.get('signingKey').then(({ signingKey }) => signingKey);
+/*::
+//ISSUE: opaque type for hex?
+
+export type SigningKey = {
+  label: string,
+  secretKey: {
+    nonce: string,
+    cipherText: string,
+  },
+  pubKey: string
+}
+
+interface SigTool {
+  getKey(): Promise<SigningKey>,
+  generate({ label: string, password: string }): Promise<SigningKey>,
+  signMessage(message: Uint8Array, signingKey: SigningKey, password: string): string
+}
+
+ */
+
+export function sigTool(local /*: StorageArea */, nacl /*: Nacl*/) /*: SigTool */ {
+  function getKey() /*: Promise<SigningKey> */{
+    return local.get('signingKey').then(({ signingKey }) => ((signingKey /*:any*/)/*: SigningKey*/));
   }
 
   function generate({ label, password }) {
@@ -98,7 +133,11 @@ export function sigTool(local, nacl) {
     return { cipherText, nonce };
   }
 
-  function signMessage(message, signingKey, password) {
+  function signMessage(
+    message /*: Uint8Array */,
+    signingKey /*: SigningKey*/,
+    password /*: string*/,
+  ) {
     const nonce = h2b(signingKey.secretKey.nonce);
     const box = h2b(signingKey.secretKey.cipherText);
     const secretKey = nacl.secretbox.open(box, nonce, passKey(password));
@@ -126,9 +165,12 @@ export function sigTool(local, nacl) {
  * @param calling: a function of the form (cb) => o.m(..., cb)
  * @return A promise for the result passed to cb
  */
-function asPromise(chrome, calling) {
+function asPromise/*:: <T>*/(
+  chrome /*: typeof chrome*/,
+  calling /*: (cb: (T) => void) => any */,
+) /*: Promise<T> */{
   function executor(resolve, reject) {
-    function callback(result) {
+    function callback(result /*: T*/) {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
         return;
@@ -140,6 +182,12 @@ function asPromise(chrome, calling) {
   }
 
   return new Promise(executor);
+}
+
+
+function utf8(s /*: string*/) /*: Uint8Array*/ {
+  const byteChars = unescape(encodeURIComponent(s));
+  return Uint8Array.from([...byteChars].map(ch => ch.charCodeAt(0)));
 }
 
 
@@ -162,7 +210,7 @@ function b2h(uint8arr) {
 
 function h2b(str) {
   if (!str) {
-    return new Uint8Array();
+    return new Uint8Array([]);
   }
 
   const a = [];

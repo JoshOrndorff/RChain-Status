@@ -1,3 +1,5 @@
+// @flow
+
 import { Par } from './lib/RhoTypes.js';
 
 /**
@@ -9,10 +11,10 @@ import { Par } from './lib/RhoTypes.js';
  * @param x Any javascript object to be serialized to RHOCore
  * @return A rholang term representing the object in RHOCore form.
  */
-export function fromJSData(data) {
+export function fromJSData(data /*: any */) {
   const expr1 = kv => ({ exprs: [kv] });
 
-  function recur(x) {
+  function recur(x) /*: Par*/ {
     switch (typeof x) {
       case 'boolean':
         return expr1({ g_bool: x, expr_instance: 'g_bool' });
@@ -61,7 +63,7 @@ export function fromJSData(data) {
  * @param termObj a rholang term object
  * @return The byte-array
  */
-export function toByteArray(termObj) {
+export function toByteArray(termObj /*: Par */) {
   // Par.verify(termObj);
   return Par.encode(termObj).finish();
 }
@@ -73,7 +75,7 @@ export function toByteArray(termObj) {
  * @param par A RHOCore representation of a Rholang term
  * @return A rholang string
  */
-export function toRholang(par) {
+export function toRholang(par /*: Par */) {
   const src = x => JSON.stringify(x);
 
   function recur(p) {

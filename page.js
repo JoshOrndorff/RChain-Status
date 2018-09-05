@@ -1,33 +1,38 @@
-export default function statusPage(ui, fetch, port) {
+import messageBus from './sigui/messageBus.js';
+
+const def = obj => Object.freeze(obj);
+// combination of rchain domain and randomly chosen data.
+const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
+
+
+export default function statusPage(ui, port, fetch) {
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
-  const THE_TOKEN = 'rchain.coop/6kbIdoB2';
   let toSign = null;
+
+  const bus = messageBus(port, 'statusPage');
+  // bus.attach(`${RCHAIN_SIGNING}/popup`, bus.makeProxy());
+
+  /**
+   * Get an offer to sign data.
+   * @param objs - array of live objects
+   * @param objs[0] - signer making the offer
+   */
+  function offer([signer]) {
+    if (!toSign) { return; }
+    signer.invoke('requestSignature', [], toSign)
+      .then(({ signature, pubKey }) => { ui.showText(ui.signature, signature); })
+      .catch((problem) => { ui.showText(ui.problem, problem.message); });
+  }
+  bus.attach(`${RCHAIN_SIGNING}/page`, bus.fromNear(def({ offer })));
+
+  port.onmessage((event) => {
+    bus.receive(event.data);
+  });
 
   ui.registerButton.addEventListener('click', () => {
     toSign = ['register', { name: getName() }];
     console.log('register:', { toSign });
-  });
-
-  port.onmessage((event) => {
-    if (event.data.type !== THE_TOKEN) { return; }
-    if (event.data.offer) {
-      console.log('statusPage: got offer to sign:', { data: event.data, toSign });
-
-      if (!toSign) { return; }
-
-      console.log('register: sending', { toSign });
-      port.postMessage({
-        type: THE_TOKEN,
-        payload: toSign,
-      }, '*');
-    } else if ('success' in event.data) {
-      if (event.data.success) {
-        ui.showText(ui.signature, event.data.signature);
-      } else {
-        ui.showText(ui.problem, event.data.message);
-      }
-    }
   });
 
   /*@@@@
