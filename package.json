@@ -28,6 +28,6 @@
     "@grpc/proto-loader": "^0.3.0",
     "express": "^4.16.3",
     "grpc": "^1.14.1",
-    "rchain-api": "github:JoshOrndorff/RChain-API"
+    "rchain-api": "github:JoshOrndorff/RChain-API#f2fc0c0b9a488a44a9916f72bdafa541fd98ed69"
   }
 }
