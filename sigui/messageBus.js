@@ -12,6 +12,10 @@ export interface FarRef {
   invoke(method: string, locals: Array<FarRef>, ...args: Array<any>): Promise<any>
 }
 
+export interface FarRef2 {
+  invokeRef(method: string, refs: Array<string>, ...args: Array<any>): Promise<any>
+}
+
 export type BusMessage = {
   kind: 'invoke',
   target: string,
@@ -23,20 +27,22 @@ export type BusMessage = {
 
 export type SuccessReply = {
   kind: 'success',
-  inReplyTo: ?number,
   result: mixed,
 }
 
 export type FailureReply = {
   kind: 'failure',
-  inReplyTo: ?number,
   message: string
 }
 
 export type BusReply = SuccessReply | FailureReply;
 
 export interface BusTarget {
-  receive(msg: BusMessage): Promise<mixed>
+  receive(msg: BusMessage): boolean
+}
+
+export interface BusDelayedTarget {
+  receive(msg: BusMessage, cb: (BusReply) => void): boolean | void
 }
 
 type PendingWork = {

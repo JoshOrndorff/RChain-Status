@@ -4,7 +4,7 @@
 
 /* global unescape, encodeURIComponent, HTMLInputElement, HTMLTextAreaElement */
 
-import def from './def.js';
+const def = Object.freeze;
 
 /*::
 

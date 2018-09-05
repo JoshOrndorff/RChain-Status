@@ -6,11 +6,17 @@ import { fromJSData, toByteArray, toRholang } from './RHOCore.js';
 
 import { sigTool, localStorage, input } from './sigTool.js';
 
+const def = Object.freeze;
 const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
 
 /*::
 import { type UserAgent, type SigningKey } from './sigTool.js';
-import { type BusMessage } from './messageBus.js';
+import {
+  type BusMessage,
+  type BusReply,
+  type BusDelayedTarget,
+  type FarRef2,
+} from './messageBus.js';
 
 import type Nacl from './lib/nacl-fast.min.js';
 */
@@ -41,7 +47,7 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
 
         const sig = tool.signMessage(message, signingKey, password);
         if (requestPending) {
-          requestPending.resolve(sig);
+          requestPending.resolve({ signature: sig, pubKey: signingKey.pubKey });
           requestPending = null;
         }
         return sig;
@@ -90,39 +96,51 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
     });
 
     const selfRef = `${RCHAIN_SIGNING}/popup`;
+    const self = promiseProxy(selfRef, def({ requestSignature }));
     // ISSUE: ua.chrome vs. ua.browser
     ua.chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const offerToSign /*: BusMessage */ = {
-        kind: 'invoke',
-        target: `${RCHAIN_SIGNING}/page`,
-        method: 'offer',
-        refs: [selfRef],
-        args: [],
-      };
-      const ignoreReply = () => null;
-      console.log('@@rhoSig sending', offerToSign.method, offerToSign);
-      ua.chrome.tabs.sendMessage(tabs[0].id || 0, offerToSign, ignoreReply);
+      const toPage = oneWayProxy(`${RCHAIN_SIGNING}/page`, ua.chrome.tabs, tabs[0].id || 0);
+      toPage.invokeRef('offer', [selfRef]);
     });
 
     // ISSUE: flow-interfaces-chrome doesn't realize sendResponse takes an arg
     const { onMessage } = (ua.chrome.runtime /*:any*/);
-    onMessage.addListener((msg, _sender, sendResponse) => {
-      console.log('@@rhoSig received', msg);
-      if (msg.target !== selfRef) { return undefined; }
-      if (msg.method !== 'requestSignature') { return undefined; } // ISSUE: reply with error?
-      console.log('@@rhoSig received invoke self', msg.method);
-
-      requestSignature(msg.refs || [], ...[].concat(msg.args))
-        .then((sig) => {
-          const win = { kind: 'success', result: sig };
-          sendResponse(win);
-        })
-        .catch((oops) => {
-          const fail = { kind: 'failure', message: oops.message };
-          sendResponse(fail);
-        });
-
-      return true;
-    });
+    onMessage.addListener(
+      (msg, _sender, sendResponse) => self.receive(msg, sendResponse),
+    );
   });
+}
+
+
+function oneWayProxy(name, port, tabId) /*: FarRef2 */{
+  const ignoreReply = () => null;
+
+  function invokeRef(method, refs, ...args) {
+    const msg /*: BusMessage */ = { method, refs, args, target: name, kind: 'invoke' };
+    console.log('rhoSig oneWayProxy sending', msg.method, msg);
+    port.sendMessage(tabId, msg, ignoreReply);
+    return Promise.reject(new TypeError('one way!'));
+  }
+  return def({ invokeRef });
+}
+
+
+function promiseProxy(name, obj) /*: BusDelayedTarget */ {
+  function receive({ target, method, refs, args }, sendResponse) {
+    if (target !== name) { return undefined; }
+    if (!(method in obj)) { return undefined; } // ISSUE: reply with error?
+    console.log('@@rhoSig promiseProxy received invoke', method);
+
+    obj[method](refs, ...args)
+      .then((result) => {
+        const win /*: BusReply */ = { result, kind: 'success' };
+        sendResponse(win);
+      })
+      .catch(({ message }) => {
+        const fail /*: BusReply */ = { message, kind: 'failure' };
+        sendResponse(fail);
+      });
+    return true;
+  }
+  return def({ receive });
 }

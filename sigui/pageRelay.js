@@ -4,6 +4,8 @@
 
 // @flow
 
+const def = Object.freeze;
+
 /*::
 import { type BusTarget, type BusMessage, type BusReply, type BusPort } from './messageBus.js';
 */
@@ -14,13 +16,44 @@ const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
 function startRelay(runtime /*: typeof chrome.runtime*/, pgPort /*: BusPort*/) {
   console.log('startRelay...');
 
+  const toPage = oneWayForwarder(`${RCHAIN_SIGNING}/page`, pgPort);
+
   // ISSUE: Callback declaration for runtime.onMessage in flow-interfaces-chrome
   // isn't right.
   const { onMessage } = (runtime /*:any*/);
-  onMessage.addListener((maybeMsg, _sender, _sendResponse) => {
+  onMessage.addListener((msg, _sender, _sendResponse) => {
+    toPage.receive(msg);
+  });
+
+  const toPopup = callbackForwarder(`${RCHAIN_SIGNING}/popup`, runtime, pgPort);
+  pgPort.listen((msg /*: BusMessage | BusReply*/) => {
+    if (msg.kind !== 'invoke') { return false; }
+    return toPopup.receive(msg);
+  });
+}
+
+
+// ISSUE: belongs in messageBus.js?
+function callbackForwarder(name, destPort, srcPort) {
+  function receive(msg) {
+    if (msg.target !== name) { return false; }
+    console.log('forwarder sending to runtime', msg);
+    destPort.sendMessage(msg, (response) => {
+      console.log('forwarder forwarding reply from runtime', response);
+      srcPort.postMessage(response);
+    });
+    return true;
+  }
+  return def({ receive });
+}
+
+
+// ISSUE: belongs in messageBus.js?
+function oneWayForwarder(name, port) {
+  function receive(maybeMsg) {
     const msg = maybeMsg || {};
-    if (msg.target !== `${RCHAIN_SIGNING}/page`) { return; }
-    console.log('@@pageRelay got runtime message for page', maybeMsg.method, maybeMsg);
+    if (msg.target !== name) { return; }
+
     const pgInvoke /*: BusMessage */ = {
       kind: 'invoke',
       target: msg.target,
@@ -28,22 +61,12 @@ function startRelay(runtime /*: typeof chrome.runtime*/, pgPort /*: BusPort*/) {
       refs: msg.refs || [],
       args: msg.args || [],
     };
-    console.log('@@pageRelay relaying', pgInvoke.method, pgInvoke);
-    pgPort.postMessage(pgInvoke);
-    // issue: how to handle replies?
-  });
 
-  pgPort.listen((msg /*: BusMessage | BusReply*/) => {
-    if (msg.target !== `${RCHAIN_SIGNING}/popup`) { return false; }
-    console.log('@@pageRelay got page message for popup', msg);
-    if (msg.kind !== 'invoke') { return false; }
-    console.log('@@pageRelay sending to runtime', msg);
-    runtime.sendMessage(msg, (response) => {
-      console.log('@@pageRelay forwarding reply from runtime', response);
-      pgPort.postMessage(response);
-    });
-    return true;
-  });
+    console.log('pageRelay relaying', pgInvoke.method, pgInvoke);
+    port.postMessage(pgInvoke);
+  }
+
+  return def({ receive });
 }
 
 
