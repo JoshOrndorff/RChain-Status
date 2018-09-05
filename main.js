@@ -45,10 +45,13 @@ function bail(res, oops) {
 
 function registerHandler(deploy) {
   return (req, res) => {
+
     const nameExpr = strLit(req.params.name);
 
+    const code = req.query.code ? req.query.code : `@"registerInsecure"!(${nameExpr}, Nil)`;
+
     // TODO: use a non-trivial return channel and wait for results there.
-    deploy(`@"register"!(${nameExpr}, Nil)`)
+    deploy(code)
       .then((result) => {
         res.send(result);
       }).catch(oops => bail(res, oops));

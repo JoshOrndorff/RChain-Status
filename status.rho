@@ -21,10 +21,10 @@ new sigVerify in {
    * @param signature ed25519 signature over controlPanel
    * @return 0 for success, or a human-readable error message
    */
-  contract @"register"(@controlPanel, @pubKey, @signature, return) = {
+  contract @"register"(@controlPanel, @signature, @pubKey, return) = {
 
     new goodSig in {
-      sigVerify!(controlPanel, pubKey.hexToBytes(), signature.hexToBytes(), *goodSig, *return)|
+      sigVerify!(controlPanel, signature.hexToBytes(), pubKey.hexToBytes(), *goodSig, *return)|
       for (_ <- goodSig){
 
         new statusCh, pubKeyCh, nonceCh in {

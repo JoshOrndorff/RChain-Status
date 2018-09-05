@@ -10,6 +10,8 @@ import {
 } from './sigui/messageBus.js';
  */
 
+import { fromJSData, toRholang } from './sigui/RHOCore.js';
+
 const def = Object.freeze;
 
 // combination of rchain domain and randomly chosen data.
@@ -33,8 +35,12 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
     console.log('page requesting signature of', toSign);
     signer.invoke('requestSignature', [], toSign)
       .then(({ signature, pubKey }) => {
-        const withSig = [].concat(toSign, [{ signature, pubKey }]);
-        ui.signature.value = JSON.stringify(withSig);
+        //const withSig = {"register": [getName(), pubKey, signature, "bogusReturnChan"]}//[].concat(toSign, [{ signature, pubKey }]);
+
+        // TODO make this better and move it to main.js
+        const rholangCode = `@"register"!(${JSON.stringify(getName())}, "${signature}", "${pubKey}", "bogusReturn")`
+        ui.signature.value = rholangCode;
+        fetch(urlEncode`/users/${getName()}?code=${rholangCode}`, { method: 'POST' })
       })
       .catch((problem) => { ui.showText(ui.problem, problem.message); });
   }
@@ -68,15 +74,16 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
 
   ui.registerButton.addEventListener('click', () => {
     if (ui.registerSign.checked) {
-      toSign = ['register', { name: getName() }];
+      toSign = getName();
+    }
+    else {
+      // Insecure register
+      fetch(urlEncode`/users/${getName()}`, { method: 'POST' });
+      // TODO make the button busy
+      // TODO report status
     }
   });
 
-  remoteAction(
-    ui.registerButton,
-    () => fetch(urlEncode`/users/${getName()}`, { method: 'POST' }),
-    () => `register ${getName()}`,
-  );
 
   remoteAction(
     ui.checkButton,
