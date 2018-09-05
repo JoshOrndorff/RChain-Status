@@ -1,7 +1,6 @@
 // @flow
 
 /* global unescape, encodeURIComponent */
-/* eslint-disable import/extensions */
 
 import def from './def.js';
 

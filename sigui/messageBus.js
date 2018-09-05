@@ -3,20 +3,52 @@
 import def from './def.js';
 
 /*::
-interface Port {
-  postMessage(msg: Object, origin: string): null
+export interface BusPort {
+  postMessage(msg: BusMessage | BusReply): void,
+  listen(cb: (BusMessage | BusReply) => boolean): void
 }
 
-interface FarRef {
+export interface FarRef {
   invoke(method: string, locals: Array<FarRef>, ...args: Array<any>): Promise<any>
 }
 
+export type BusMessage = {
+  kind: 'invoke',
+  target: string,
+  method: string,
+  refs: Array<string>,
+  args: Array<mixed>,
+  seq?: number
+}
+
+export type SuccessReply = {
+  kind: 'success',
+  inReplyTo: ?number,
+  result: mixed,
+}
+
+export type FailureReply = {
+  kind: 'failure',
+  inReplyTo: ?number,
+  message: string
+}
+
+export type BusReply = SuccessReply | FailureReply;
+
+export interface BusTarget {
+  receive(msg: BusMessage): Promise<mixed>
+}
+
+type PendingWork = {
+  resolve: (v: any) => void,
+  reject: (messge: string) => void
+}
  */
 
-export default function messageBus(port /*: Port */, label /*: string*/) {
+export default function messageBus(port /*: BusPort */, label /*: string*/) {
   const byRef /*: Map<string, FarRef> */= new Map();
   const byObject /*: Map<FarRef, string> */ = new Map();
-  const pending = new Map(); // sequence number to pending call's promise
+  const pending /*: Map<number, PendingWork> */ = new Map();
   let sequence = 0;
 
   function attach(ref /*: string*/, obj /*: Object*/) {
@@ -59,7 +91,7 @@ export default function messageBus(port /*: Port */, label /*: string*/) {
       const resultP = new Promise((resolve, reject) => {
         pending.set(sequence, { resolve, reject });
       });
-      port.postMessage({ target: ref, method, refs, args, seq: sequence }, '*');
+      port.postMessage({ kind: 'invoke', target: ref, method, refs, args, seq: sequence });
       console.log('makeProxy invoke posted message', label, { target: ref, method, refs, args, seq: sequence });
 
       return resultP;
@@ -70,32 +102,31 @@ export default function messageBus(port /*: Port */, label /*: string*/) {
     return self;
   }
 
-  function receive(msg/*: Object*/) {
-    const { inReplyTo } = msg;
-    if (typeof inReplyTo !== 'undefined') {
-      const work = pending.get(inReplyTo);
-      if (work) {
-        const { resolve, reject } = work;
-        if ('result' in msg) {
-          resolve(msg.result);
-        } else {
-          reject(msg.message);
-        }
-      }
-    } else {
+  function receive(msg/*: BusMessage | BusReply*/) {
+    if (msg.kind === 'invoke') {
       const { target, method, refs, args, seq } = msg;
       const obj = byRef.get(target);
       if (!obj) { return; }
       const locals = refs.map(lookup(byRef, makeProxy));
       obj.invoke(method, locals, ...args)
         .then((result) => {
-          port.postMessage({ inReplyTo: seq, result }, '*');
+          port.postMessage({ kind: 'success', inReplyTo: seq, result });
           console.log('receive / invoke / result', label, target);
         })
         .catch((exception) => {
-          port.postMessage({ inReplyTo: seq, message: exception.message }, '*');
+          port.postMessage({ kind: 'failure', inReplyTo: seq, message: exception.message });
           console.log('receive / invoke / FAIL', label, target);
         });
+    } else {
+      const work = pending.get(msg.inReplyTo || -1);
+      if (work) {
+        const { resolve, reject } = work;
+        if (msg.kind === 'success') {
+          resolve(msg.result);
+        } else {
+          reject(msg.message);
+        }
+      }
     }
   }
 

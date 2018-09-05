@@ -9,6 +9,9 @@ rules:
     -
       argsIgnorePattern: "_.*"
       varsIgnorePattern: "_.*"
+  import/extensions:
+    # browsers don't grok short-hands for './x.js'
+    - off
   spaced-comment:
     # conflicts with flow type annotation comments
     - off
@@ -25,4 +28,4 @@ rules:
       ObjectPattern:
         # Don't discourage long-ish lists of named powerful objects.
         multiline: true
-        minProperties: 5
+        minProperties: 7

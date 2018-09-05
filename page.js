@@ -1,16 +1,19 @@
-import messageBus from './sigui/messageBus.js';
+// @flow
+
+/*::
+import { type BusMessage, type BusReply, type BusPort } from './sigui/messageBus.js';
+ */
 
 const def = obj => Object.freeze(obj);
 // combination of rchain domain and randomly chosen data.
 const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
 
 
-export default function statusPage(ui, port, fetch) {
+export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: typeof fetch*/) {
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
   let toSign = null;
 
-  const bus = messageBus(port, 'statusPage');
   // bus.attach(`${RCHAIN_SIGNING}/popup`, bus.makeProxy());
 
   /**
@@ -21,13 +24,40 @@ export default function statusPage(ui, port, fetch) {
   function offer([signer]) {
     if (!toSign) { return; }
     signer.invoke('requestSignature', [], toSign)
-      .then(({ signature, pubKey }) => { ui.showText(ui.signature, signature); })
+      .then(({ signature }) => { ui.showText(ui.signature, signature); })
       .catch((problem) => { ui.showText(ui.problem, problem.message); });
   }
-  bus.attach(`${RCHAIN_SIGNING}/page`, bus.fromNear(def({ offer })));
 
-  port.onmessage((event) => {
-    bus.receive(event.data);
+  let pending = null;
+  port.listen((rx /*: BusMessage | BusReply */) => {
+    if (rx.kind === 'invoke') {
+      if (rx.target !== `${RCHAIN_SIGNING}/page`) { return false; }
+      if (rx.method !== 'offer') { return false; }
+      const signer = def({
+        invoke: (verb, _refs, args) => {
+          const msg /*: BusMessage*/ = {
+            kind: 'invoke',
+            target: `${RCHAIN_SIGNING}/popup`,
+            method: verb,
+            refs: [],
+            args,
+          };
+          const todo = new Promise((resolve, reject) => {
+            pending = { resolve, reject };
+          });
+          port.postMessage(msg);
+          return todo;
+        },
+      });
+      offer([signer]);
+    } else if (pending) {
+      if (rx.kind === 'success') {
+        pending.resolve({ signature: rx.result }); //@@@@
+      } else {
+        pending.reject(new Error(rx.message));
+      }
+    }
+    return true;
   });
 
   ui.registerButton.addEventListener('click', () => {

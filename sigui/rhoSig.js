@@ -1,17 +1,14 @@
 // @flow
-/* eslint-disable import/extensions */
 
 import { fromJSData, toByteArray, toRholang } from './RHOCore.js';
 
 import { sigTool, localStorage } from './sigTool.js';
 
-import messageBus from './messageBus.js';
-
-const def = obj => Object.freeze(obj);
 const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
 
 /*::
 import { type UserAgent, type SigningKey } from './sigTool.js';
+import { type BusMessage } from './messageBus.js';
 
 import type Nacl from './lib/nacl-fast.min.js';
 */
@@ -56,7 +53,7 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
     byId('status').textContent = message;
 
     if (requestPending) {
-      requestPending.reject(message);
+      requestPending.reject(new Error(message));
       requestPending = null;
     }
     console.log(exception);
@@ -92,22 +89,36 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
         .catch(oops => lose('get key', oops));
     });
 
+    const selfRef = `${RCHAIN_SIGNING}/popup`;
     // ISSUE: ua.chrome vs. ua.browser
     ua.chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const relayPort = ua.chrome.tabs.connect(tabs[0].id || 0, { name: 'Rholang signing' });
-      console.log('rhoSig created port:', relayPort);
+      const offerToSign /*: BusMessage */ = {
+        kind: 'invoke',
+        target: `${RCHAIN_SIGNING}/page`,
+        method: 'offer',
+        refs: [selfRef],
+        args: [],
+      };
+      const ignoreReply = () => null;
+      ua.chrome.tabs.sendMessage(tabs[0].id || 0, offerToSign, ignoreReply);
+    });
 
-      const bus = messageBus(relayPort, 'popup');
-      const self = bus.attach(`${RCHAIN_SIGNING}/popup`, bus.fromNear(def({ requestSignature })));
-      const pageAddr = `${RCHAIN_SIGNING}/page`;
-      const pageClient = bus.attach(pageAddr, bus.makeProxy(pageAddr));
-      pageClient.invoke('offer', [self]);
+    // ISSUE: flow-interfaces-chrome doesn't realize sendResponse takes an arg
+    ua.chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      if (msg.target !== selfRef) { return undefined; }
+      if (msg.method !== 'requestSignature') { return undefined; } // ISSUE: reply with error?
 
-      let count = 0;
-      relayPort.onMessage.addListener((msg) => {
-        console.log('relayPort count:', count++, msg);
-        bus.receive(msg);
-      });
+      requestSignature(msg.refs || [], ...[].concat(msg.args))
+        .then((sig) => {
+          const win = { kind: 'success', result: sig };
+          sendResponse(win);
+        })
+        .catch((oops) => {
+          const fail = { kind: 'failure', message: oops.message };
+          sendResponse(fail);
+        });
+
+      return true;
     });
   });
 }
