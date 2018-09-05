@@ -1,6 +1,5 @@
 /*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars*/
-
-const $protobuf = protobuf; // ISSUE: global. but powerless, right?
+import * as $protobuf from "protobufjs/minimal";
 
 const $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
 
@@ -32,7 +31,7 @@ export const Par = $root.Par = (() => {
     Par.prototype.bundles = $util.emptyArray;
     Par.prototype.connectives = $util.emptyArray;
     Par.prototype.locallyFree = $util.newBuffer([]);
-    Par.prototype.connectiveUsed = false;
+    Par.prototype.connective_used = false;
 
     Par.create = function create(properties) {
         return new Par(properties);
@@ -64,8 +63,8 @@ export const Par = $root.Par = (() => {
                 $root.Connective.encode(message.connectives[i], writer.uint32(66).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(74).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(80).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(80).bool(message.connective_used);
         if (message.bundles != null && message.bundles.length)
             for (let i = 0; i < message.bundles.length; ++i)
                 $root.Bundle.encode(message.bundles[i], writer.uint32(90).fork()).ldelim();
@@ -127,7 +126,7 @@ export const Par = $root.Par = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 10:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -221,9 +220,9 @@ export const Par = $root.Par = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -316,8 +315,8 @@ export const Par = $root.Par = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -343,7 +342,7 @@ export const Par = $root.Par = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.sends && message.sends.length) {
             object.sends = [];
@@ -382,8 +381,8 @@ export const Par = $root.Par = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         if (message.bundles && message.bundles.length) {
             object.bundles = [];
             for (let j = 0; j < message.bundles.length; ++j)
@@ -408,13 +407,13 @@ export const TaggedContinuation = $root.TaggedContinuation = (() => {
                     this[keys[i]] = properties[keys[i]];
     }
 
-    TaggedContinuation.prototype.parBody = null;
-    TaggedContinuation.prototype.scalaBodyRef = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+    TaggedContinuation.prototype.par_body = null;
+    TaggedContinuation.prototype.scala_body_ref = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
     let $oneOfFields;
 
-    Object.defineProperty(TaggedContinuation.prototype, "taggedCont", {
-        get: $util.oneOfGetter($oneOfFields = ["parBody", "scalaBodyRef"]),
+    Object.defineProperty(TaggedContinuation.prototype, "tagged_cont", {
+        get: $util.oneOfGetter($oneOfFields = ["par_body", "scala_body_ref"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -425,10 +424,10 @@ export const TaggedContinuation = $root.TaggedContinuation = (() => {
     TaggedContinuation.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.parBody != null && message.hasOwnProperty("parBody"))
-            $root.ParWithRandom.encode(message.parBody, writer.uint32(10).fork()).ldelim();
-        if (message.scalaBodyRef != null && message.hasOwnProperty("scalaBodyRef"))
-            writer.uint32(16).int64(message.scalaBodyRef);
+        if (message.par_body != null && message.hasOwnProperty("par_body"))
+            $root.ParWithRandom.encode(message.par_body, writer.uint32(10).fork()).ldelim();
+        if (message.scala_body_ref != null && message.hasOwnProperty("scala_body_ref"))
+            writer.uint32(16).int64(message.scala_body_ref);
         return writer;
     };
 
@@ -444,10 +443,10 @@ export const TaggedContinuation = $root.TaggedContinuation = (() => {
             let tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.parBody = $root.ParWithRandom.decode(reader, reader.uint32());
+                message.par_body = $root.ParWithRandom.decode(reader, reader.uint32());
                 break;
             case 2:
-                message.scalaBodyRef = reader.int64();
+                message.scala_body_ref = reader.int64();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -467,20 +466,20 @@ export const TaggedContinuation = $root.TaggedContinuation = (() => {
         if (typeof message !== "object" || message === null)
             return "object expected";
         let properties = {};
-        if (message.parBody != null && message.hasOwnProperty("parBody")) {
-            properties.taggedCont = 1;
+        if (message.par_body != null && message.hasOwnProperty("par_body")) {
+            properties.tagged_cont = 1;
             {
-                let error = $root.ParWithRandom.verify(message.parBody);
+                let error = $root.ParWithRandom.verify(message.par_body);
                 if (error)
-                    return "parBody." + error;
+                    return "par_body." + error;
             }
         }
-        if (message.scalaBodyRef != null && message.hasOwnProperty("scalaBodyRef")) {
-            if (properties.taggedCont === 1)
-                return "taggedCont: multiple values";
-            properties.taggedCont = 1;
-            if (!$util.isInteger(message.scalaBodyRef) && !(message.scalaBodyRef && $util.isInteger(message.scalaBodyRef.low) && $util.isInteger(message.scalaBodyRef.high)))
-                return "scalaBodyRef: integer|Long expected";
+        if (message.scala_body_ref != null && message.hasOwnProperty("scala_body_ref")) {
+            if (properties.tagged_cont === 1)
+                return "tagged_cont: multiple values";
+            properties.tagged_cont = 1;
+            if (!$util.isInteger(message.scala_body_ref) && !(message.scala_body_ref && $util.isInteger(message.scala_body_ref.low) && $util.isInteger(message.scala_body_ref.high)))
+                return "scala_body_ref: integer|Long expected";
         }
         return null;
     };
@@ -489,20 +488,20 @@ export const TaggedContinuation = $root.TaggedContinuation = (() => {
         if (object instanceof $root.TaggedContinuation)
             return object;
         let message = new $root.TaggedContinuation();
-        if (object.parBody != null) {
-            if (typeof object.parBody !== "object")
-                throw TypeError(".TaggedContinuation.parBody: object expected");
-            message.parBody = $root.ParWithRandom.fromObject(object.parBody);
+        if (object.par_body != null) {
+            if (typeof object.par_body !== "object")
+                throw TypeError(".TaggedContinuation.par_body: object expected");
+            message.par_body = $root.ParWithRandom.fromObject(object.par_body);
         }
-        if (object.scalaBodyRef != null)
+        if (object.scala_body_ref != null)
             if ($util.Long)
-                (message.scalaBodyRef = $util.Long.fromValue(object.scalaBodyRef)).unsigned = false;
-            else if (typeof object.scalaBodyRef === "string")
-                message.scalaBodyRef = parseInt(object.scalaBodyRef, 10);
-            else if (typeof object.scalaBodyRef === "number")
-                message.scalaBodyRef = object.scalaBodyRef;
-            else if (typeof object.scalaBodyRef === "object")
-                message.scalaBodyRef = new $util.LongBits(object.scalaBodyRef.low >>> 0, object.scalaBodyRef.high >>> 0).toNumber();
+                (message.scala_body_ref = $util.Long.fromValue(object.scala_body_ref)).unsigned = false;
+            else if (typeof object.scala_body_ref === "string")
+                message.scala_body_ref = parseInt(object.scala_body_ref, 10);
+            else if (typeof object.scala_body_ref === "number")
+                message.scala_body_ref = object.scala_body_ref;
+            else if (typeof object.scala_body_ref === "object")
+                message.scala_body_ref = new $util.LongBits(object.scala_body_ref.low >>> 0, object.scala_body_ref.high >>> 0).toNumber();
         return message;
     };
 
@@ -510,18 +509,18 @@ export const TaggedContinuation = $root.TaggedContinuation = (() => {
         if (!options)
             options = {};
         let object = {};
-        if (message.parBody != null && message.hasOwnProperty("parBody")) {
-            object.parBody = $root.ParWithRandom.toObject(message.parBody, options);
+        if (message.par_body != null && message.hasOwnProperty("par_body")) {
+            object.par_body = $root.ParWithRandom.toObject(message.par_body, options);
             if (options.oneofs)
-                object.taggedCont = "parBody";
+                object.tagged_cont = "par_body";
         }
-        if (message.scalaBodyRef != null && message.hasOwnProperty("scalaBodyRef")) {
-            if (typeof message.scalaBodyRef === "number")
-                object.scalaBodyRef = options.longs === String ? String(message.scalaBodyRef) : message.scalaBodyRef;
+        if (message.scala_body_ref != null && message.hasOwnProperty("scala_body_ref")) {
+            if (typeof message.scala_body_ref === "number")
+                object.scala_body_ref = options.longs === String ? String(message.scala_body_ref) : message.scala_body_ref;
             else
-                object.scalaBodyRef = options.longs === String ? $util.Long.prototype.toString.call(message.scalaBodyRef) : options.longs === Number ? new $util.LongBits(message.scalaBodyRef.low >>> 0, message.scalaBodyRef.high >>> 0).toNumber() : message.scalaBodyRef;
+                object.scala_body_ref = options.longs === String ? $util.Long.prototype.toString.call(message.scala_body_ref) : options.longs === Number ? new $util.LongBits(message.scala_body_ref.low >>> 0, message.scala_body_ref.high >>> 0).toNumber() : message.scala_body_ref;
             if (options.oneofs)
-                object.taggedCont = "scalaBodyRef";
+                object.tagged_cont = "scala_body_ref";
         }
         return object;
     };
@@ -663,7 +662,7 @@ export const Channel = $root.Channel = (() => {
 
     let $oneOfFields;
 
-    Object.defineProperty(Channel.prototype, "channelInstance", {
+    Object.defineProperty(Channel.prototype, "channel_instance", {
         get: $util.oneOfGetter($oneOfFields = ["quote", "chanVar"]),
         set: $util.oneOfSetter($oneOfFields)
     });
@@ -718,7 +717,7 @@ export const Channel = $root.Channel = (() => {
             return "object expected";
         let properties = {};
         if (message.quote != null && message.hasOwnProperty("quote")) {
-            properties.channelInstance = 1;
+            properties.channel_instance = 1;
             {
                 let error = $root.Par.verify(message.quote);
                 if (error)
@@ -726,9 +725,9 @@ export const Channel = $root.Channel = (() => {
             }
         }
         if (message.chanVar != null && message.hasOwnProperty("chanVar")) {
-            if (properties.channelInstance === 1)
-                return "channelInstance: multiple values";
-            properties.channelInstance = 1;
+            if (properties.channel_instance === 1)
+                return "channel_instance: multiple values";
+            properties.channel_instance = 1;
             {
                 let error = $root.Var.verify(message.chanVar);
                 if (error)
@@ -762,12 +761,12 @@ export const Channel = $root.Channel = (() => {
         if (message.quote != null && message.hasOwnProperty("quote")) {
             object.quote = $root.Par.toObject(message.quote, options);
             if (options.oneofs)
-                object.channelInstance = "quote";
+                object.channel_instance = "quote";
         }
         if (message.chanVar != null && message.hasOwnProperty("chanVar")) {
             object.chanVar = $root.Var.toObject(message.chanVar, options);
             if (options.oneofs)
-                object.channelInstance = "chanVar";
+                object.channel_instance = "chanVar";
         }
         return object;
     };
@@ -1056,14 +1055,14 @@ export const Var = $root.Var = (() => {
                     this[keys[i]] = properties[keys[i]];
     }
 
-    Var.prototype.boundVar = 0;
-    Var.prototype.freeVar = 0;
+    Var.prototype.bound_var = 0;
+    Var.prototype.free_var = 0;
     Var.prototype.wildcard = null;
 
     let $oneOfFields;
 
-    Object.defineProperty(Var.prototype, "varInstance", {
-        get: $util.oneOfGetter($oneOfFields = ["boundVar", "freeVar", "wildcard"]),
+    Object.defineProperty(Var.prototype, "var_instance", {
+        get: $util.oneOfGetter($oneOfFields = ["bound_var", "free_var", "wildcard"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -1074,10 +1073,10 @@ export const Var = $root.Var = (() => {
     Var.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.boundVar != null && message.hasOwnProperty("boundVar"))
-            writer.uint32(8).sint32(message.boundVar);
-        if (message.freeVar != null && message.hasOwnProperty("freeVar"))
-            writer.uint32(16).sint32(message.freeVar);
+        if (message.bound_var != null && message.hasOwnProperty("bound_var"))
+            writer.uint32(8).sint32(message.bound_var);
+        if (message.free_var != null && message.hasOwnProperty("free_var"))
+            writer.uint32(16).sint32(message.free_var);
         if (message.wildcard != null && message.hasOwnProperty("wildcard"))
             $root.Var.WildcardMsg.encode(message.wildcard, writer.uint32(26).fork()).ldelim();
         return writer;
@@ -1095,10 +1094,10 @@ export const Var = $root.Var = (() => {
             let tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.boundVar = reader.sint32();
+                message.bound_var = reader.sint32();
                 break;
             case 2:
-                message.freeVar = reader.sint32();
+                message.free_var = reader.sint32();
                 break;
             case 3:
                 message.wildcard = $root.Var.WildcardMsg.decode(reader, reader.uint32());
@@ -1121,22 +1120,22 @@ export const Var = $root.Var = (() => {
         if (typeof message !== "object" || message === null)
             return "object expected";
         let properties = {};
-        if (message.boundVar != null && message.hasOwnProperty("boundVar")) {
-            properties.varInstance = 1;
-            if (!$util.isInteger(message.boundVar))
-                return "boundVar: integer expected";
+        if (message.bound_var != null && message.hasOwnProperty("bound_var")) {
+            properties.var_instance = 1;
+            if (!$util.isInteger(message.bound_var))
+                return "bound_var: integer expected";
         }
-        if (message.freeVar != null && message.hasOwnProperty("freeVar")) {
-            if (properties.varInstance === 1)
-                return "varInstance: multiple values";
-            properties.varInstance = 1;
-            if (!$util.isInteger(message.freeVar))
-                return "freeVar: integer expected";
+        if (message.free_var != null && message.hasOwnProperty("free_var")) {
+            if (properties.var_instance === 1)
+                return "var_instance: multiple values";
+            properties.var_instance = 1;
+            if (!$util.isInteger(message.free_var))
+                return "free_var: integer expected";
         }
         if (message.wildcard != null && message.hasOwnProperty("wildcard")) {
-            if (properties.varInstance === 1)
-                return "varInstance: multiple values";
-            properties.varInstance = 1;
+            if (properties.var_instance === 1)
+                return "var_instance: multiple values";
+            properties.var_instance = 1;
             {
                 let error = $root.Var.WildcardMsg.verify(message.wildcard);
                 if (error)
@@ -1150,10 +1149,10 @@ export const Var = $root.Var = (() => {
         if (object instanceof $root.Var)
             return object;
         let message = new $root.Var();
-        if (object.boundVar != null)
-            message.boundVar = object.boundVar | 0;
-        if (object.freeVar != null)
-            message.freeVar = object.freeVar | 0;
+        if (object.bound_var != null)
+            message.bound_var = object.bound_var | 0;
+        if (object.free_var != null)
+            message.free_var = object.free_var | 0;
         if (object.wildcard != null) {
             if (typeof object.wildcard !== "object")
                 throw TypeError(".Var.wildcard: object expected");
@@ -1166,20 +1165,20 @@ export const Var = $root.Var = (() => {
         if (!options)
             options = {};
         let object = {};
-        if (message.boundVar != null && message.hasOwnProperty("boundVar")) {
-            object.boundVar = message.boundVar;
+        if (message.bound_var != null && message.hasOwnProperty("bound_var")) {
+            object.bound_var = message.bound_var;
             if (options.oneofs)
-                object.varInstance = "boundVar";
+                object.var_instance = "bound_var";
         }
-        if (message.freeVar != null && message.hasOwnProperty("freeVar")) {
-            object.freeVar = message.freeVar;
+        if (message.free_var != null && message.hasOwnProperty("free_var")) {
+            object.free_var = message.free_var;
             if (options.oneofs)
-                object.varInstance = "freeVar";
+                object.var_instance = "free_var";
         }
         if (message.wildcard != null && message.hasOwnProperty("wildcard")) {
             object.wildcard = $root.Var.WildcardMsg.toObject(message.wildcard, options);
             if (options.oneofs)
-                object.varInstance = "wildcard";
+                object.var_instance = "wildcard";
         }
         return object;
     };
@@ -1393,7 +1392,7 @@ export const Send = $root.Send = (() => {
     Send.prototype.data = $util.emptyArray;
     Send.prototype.persistent = false;
     Send.prototype.locallyFree = $util.newBuffer([]);
-    Send.prototype.connectiveUsed = false;
+    Send.prototype.connective_used = false;
 
     Send.create = function create(properties) {
         return new Send(properties);
@@ -1411,8 +1410,8 @@ export const Send = $root.Send = (() => {
             writer.uint32(24).bool(message.persistent);
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(42).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(48).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(48).bool(message.connective_used);
         return writer;
     };
 
@@ -1442,7 +1441,7 @@ export const Send = $root.Send = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 6:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -1481,9 +1480,9 @@ export const Send = $root.Send = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -1513,8 +1512,8 @@ export const Send = $root.Send = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -1534,7 +1533,7 @@ export const Send = $root.Send = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.chan != null && message.hasOwnProperty("chan"))
             object.chan = $root.Channel.toObject(message.chan, options);
@@ -1547,8 +1546,8 @@ export const Send = $root.Send = (() => {
             object.persistent = message.persistent;
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         return object;
     };
 
@@ -1987,7 +1986,7 @@ export const Receive = $root.Receive = (() => {
     Receive.prototype.persistent = false;
     Receive.prototype.bindCount = 0;
     Receive.prototype.locallyFree = $util.newBuffer([]);
-    Receive.prototype.connectiveUsed = false;
+    Receive.prototype.connective_used = false;
 
     Receive.create = function create(properties) {
         return new Receive(properties);
@@ -2007,8 +2006,8 @@ export const Receive = $root.Receive = (() => {
             writer.uint32(32).int32(message.bindCount);
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(50).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(56).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(56).bool(message.connective_used);
         return writer;
     };
 
@@ -2041,7 +2040,7 @@ export const Receive = $root.Receive = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 7:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -2083,9 +2082,9 @@ export const Receive = $root.Receive = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -2117,8 +2116,8 @@ export const Receive = $root.Receive = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -2139,7 +2138,7 @@ export const Receive = $root.Receive = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.binds && message.binds.length) {
             object.binds = [];
@@ -2154,8 +2153,8 @@ export const Receive = $root.Receive = (() => {
             object.bindCount = message.bindCount;
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         return object;
     };
 
@@ -2466,7 +2465,7 @@ export const Match = $root.Match = (() => {
     Match.prototype.target = null;
     Match.prototype.cases = $util.emptyArray;
     Match.prototype.locallyFree = $util.newBuffer([]);
-    Match.prototype.connectiveUsed = false;
+    Match.prototype.connective_used = false;
 
     Match.create = function create(properties) {
         return new Match(properties);
@@ -2482,8 +2481,8 @@ export const Match = $root.Match = (() => {
                 $root.MatchCase.encode(message.cases[i], writer.uint32(18).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(34).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(40).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(40).bool(message.connective_used);
         return writer;
     };
 
@@ -2510,7 +2509,7 @@ export const Match = $root.Match = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 5:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -2546,9 +2545,9 @@ export const Match = $root.Match = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -2576,8 +2575,8 @@ export const Match = $root.Match = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -2596,7 +2595,7 @@ export const Match = $root.Match = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.target != null && message.hasOwnProperty("target"))
             object.target = $root.Par.toObject(message.target, options);
@@ -2607,8 +2606,8 @@ export const Match = $root.Match = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         return object;
     };
 
@@ -2628,41 +2627,41 @@ export const Expr = $root.Expr = (() => {
                     this[keys[i]] = properties[keys[i]];
     }
 
-    Expr.prototype.gBool = false;
-    Expr.prototype.gInt = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-    Expr.prototype.gString = "";
-    Expr.prototype.gUri = "";
-    Expr.prototype.gByteArray = $util.newBuffer([]);
-    Expr.prototype.eNotBody = null;
-    Expr.prototype.eNegBody = null;
-    Expr.prototype.eMultBody = null;
-    Expr.prototype.eDivBody = null;
-    Expr.prototype.ePlusBody = null;
-    Expr.prototype.eMinusBody = null;
-    Expr.prototype.eLtBody = null;
-    Expr.prototype.eLteBody = null;
-    Expr.prototype.eGtBody = null;
-    Expr.prototype.eGteBody = null;
-    Expr.prototype.eEqBody = null;
-    Expr.prototype.eNeqBody = null;
-    Expr.prototype.eAndBody = null;
-    Expr.prototype.eOrBody = null;
-    Expr.prototype.eVarBody = null;
-    Expr.prototype.eListBody = null;
-    Expr.prototype.eTupleBody = null;
-    Expr.prototype.eSetBody = null;
-    Expr.prototype.eMapBody = null;
-    Expr.prototype.eMethodBody = null;
-    Expr.prototype.eEvalBody = null;
-    Expr.prototype.eMatchesBody = null;
-    Expr.prototype.ePercentPercentBody = null;
-    Expr.prototype.ePlusPlusBody = null;
-    Expr.prototype.eMinusMinusBody = null;
+    Expr.prototype.g_bool = false;
+    Expr.prototype.g_int = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+    Expr.prototype.g_string = "";
+    Expr.prototype.g_uri = "";
+    Expr.prototype.g_byte_array = $util.newBuffer([]);
+    Expr.prototype.e_not_body = null;
+    Expr.prototype.e_neg_body = null;
+    Expr.prototype.e_mult_body = null;
+    Expr.prototype.e_div_body = null;
+    Expr.prototype.e_plus_body = null;
+    Expr.prototype.e_minus_body = null;
+    Expr.prototype.e_lt_body = null;
+    Expr.prototype.e_lte_body = null;
+    Expr.prototype.e_gt_body = null;
+    Expr.prototype.e_gte_body = null;
+    Expr.prototype.e_eq_body = null;
+    Expr.prototype.e_neq_body = null;
+    Expr.prototype.e_and_body = null;
+    Expr.prototype.e_or_body = null;
+    Expr.prototype.e_var_body = null;
+    Expr.prototype.e_list_body = null;
+    Expr.prototype.e_tuple_body = null;
+    Expr.prototype.e_set_body = null;
+    Expr.prototype.e_map_body = null;
+    Expr.prototype.e_method_body = null;
+    Expr.prototype.e_eval_body = null;
+    Expr.prototype.e_matches_body = null;
+    Expr.prototype.e_percent_percent_body = null;
+    Expr.prototype.e_plus_plus_body = null;
+    Expr.prototype.e_minus_minus_body = null;
 
     let $oneOfFields;
 
-    Object.defineProperty(Expr.prototype, "exprInstance", {
-        get: $util.oneOfGetter($oneOfFields = ["gBool", "gInt", "gString", "gUri", "gByteArray", "eNotBody", "eNegBody", "eMultBody", "eDivBody", "ePlusBody", "eMinusBody", "eLtBody", "eLteBody", "eGtBody", "eGteBody", "eEqBody", "eNeqBody", "eAndBody", "eOrBody", "eVarBody", "eListBody", "eTupleBody", "eSetBody", "eMapBody", "eMethodBody", "eEvalBody", "eMatchesBody", "ePercentPercentBody", "ePlusPlusBody", "eMinusMinusBody"]),
+    Object.defineProperty(Expr.prototype, "expr_instance", {
+        get: $util.oneOfGetter($oneOfFields = ["g_bool", "g_int", "g_string", "g_uri", "g_byte_array", "e_not_body", "e_neg_body", "e_mult_body", "e_div_body", "e_plus_body", "e_minus_body", "e_lt_body", "e_lte_body", "e_gt_body", "e_gte_body", "e_eq_body", "e_neq_body", "e_and_body", "e_or_body", "e_var_body", "e_list_body", "e_tuple_body", "e_set_body", "e_map_body", "e_method_body", "e_eval_body", "e_matches_body", "e_percent_percent_body", "e_plus_plus_body", "e_minus_minus_body"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -2673,66 +2672,66 @@ export const Expr = $root.Expr = (() => {
     Expr.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.gBool != null && message.hasOwnProperty("gBool"))
-            writer.uint32(8).bool(message.gBool);
-        if (message.gInt != null && message.hasOwnProperty("gInt"))
-            writer.uint32(16).sint64(message.gInt);
-        if (message.gString != null && message.hasOwnProperty("gString"))
-            writer.uint32(26).string(message.gString);
-        if (message.gUri != null && message.hasOwnProperty("gUri"))
-            writer.uint32(34).string(message.gUri);
-        if (message.eNotBody != null && message.hasOwnProperty("eNotBody"))
-            $root.ENot.encode(message.eNotBody, writer.uint32(42).fork()).ldelim();
-        if (message.eNegBody != null && message.hasOwnProperty("eNegBody"))
-            $root.ENeg.encode(message.eNegBody, writer.uint32(50).fork()).ldelim();
-        if (message.eMultBody != null && message.hasOwnProperty("eMultBody"))
-            $root.EMult.encode(message.eMultBody, writer.uint32(58).fork()).ldelim();
-        if (message.eDivBody != null && message.hasOwnProperty("eDivBody"))
-            $root.EDiv.encode(message.eDivBody, writer.uint32(66).fork()).ldelim();
-        if (message.ePlusBody != null && message.hasOwnProperty("ePlusBody"))
-            $root.EPlus.encode(message.ePlusBody, writer.uint32(74).fork()).ldelim();
-        if (message.eMinusBody != null && message.hasOwnProperty("eMinusBody"))
-            $root.EMinus.encode(message.eMinusBody, writer.uint32(82).fork()).ldelim();
-        if (message.eLtBody != null && message.hasOwnProperty("eLtBody"))
-            $root.ELt.encode(message.eLtBody, writer.uint32(90).fork()).ldelim();
-        if (message.eLteBody != null && message.hasOwnProperty("eLteBody"))
-            $root.ELte.encode(message.eLteBody, writer.uint32(98).fork()).ldelim();
-        if (message.eGtBody != null && message.hasOwnProperty("eGtBody"))
-            $root.EGt.encode(message.eGtBody, writer.uint32(106).fork()).ldelim();
-        if (message.eGteBody != null && message.hasOwnProperty("eGteBody"))
-            $root.EGte.encode(message.eGteBody, writer.uint32(114).fork()).ldelim();
-        if (message.eEqBody != null && message.hasOwnProperty("eEqBody"))
-            $root.EEq.encode(message.eEqBody, writer.uint32(122).fork()).ldelim();
-        if (message.eNeqBody != null && message.hasOwnProperty("eNeqBody"))
-            $root.ENeq.encode(message.eNeqBody, writer.uint32(130).fork()).ldelim();
-        if (message.eAndBody != null && message.hasOwnProperty("eAndBody"))
-            $root.EAnd.encode(message.eAndBody, writer.uint32(138).fork()).ldelim();
-        if (message.eOrBody != null && message.hasOwnProperty("eOrBody"))
-            $root.EOr.encode(message.eOrBody, writer.uint32(146).fork()).ldelim();
-        if (message.eVarBody != null && message.hasOwnProperty("eVarBody"))
-            $root.EVar.encode(message.eVarBody, writer.uint32(154).fork()).ldelim();
-        if (message.eListBody != null && message.hasOwnProperty("eListBody"))
-            $root.EList.encode(message.eListBody, writer.uint32(162).fork()).ldelim();
-        if (message.eTupleBody != null && message.hasOwnProperty("eTupleBody"))
-            $root.ETuple.encode(message.eTupleBody, writer.uint32(170).fork()).ldelim();
-        if (message.eSetBody != null && message.hasOwnProperty("eSetBody"))
-            $root.ESet.encode(message.eSetBody, writer.uint32(178).fork()).ldelim();
-        if (message.eMapBody != null && message.hasOwnProperty("eMapBody"))
-            $root.EMap.encode(message.eMapBody, writer.uint32(186).fork()).ldelim();
-        if (message.eMethodBody != null && message.hasOwnProperty("eMethodBody"))
-            $root.EMethod.encode(message.eMethodBody, writer.uint32(194).fork()).ldelim();
-        if (message.gByteArray != null && message.hasOwnProperty("gByteArray"))
-            writer.uint32(202).bytes(message.gByteArray);
-        if (message.eEvalBody != null && message.hasOwnProperty("eEvalBody"))
-            $root.Channel.encode(message.eEvalBody, writer.uint32(210).fork()).ldelim();
-        if (message.eMatchesBody != null && message.hasOwnProperty("eMatchesBody"))
-            $root.EMatches.encode(message.eMatchesBody, writer.uint32(218).fork()).ldelim();
-        if (message.ePercentPercentBody != null && message.hasOwnProperty("ePercentPercentBody"))
-            $root.EPercentPercent.encode(message.ePercentPercentBody, writer.uint32(226).fork()).ldelim();
-        if (message.ePlusPlusBody != null && message.hasOwnProperty("ePlusPlusBody"))
-            $root.EPlusPlus.encode(message.ePlusPlusBody, writer.uint32(234).fork()).ldelim();
-        if (message.eMinusMinusBody != null && message.hasOwnProperty("eMinusMinusBody"))
-            $root.EMinusMinus.encode(message.eMinusMinusBody, writer.uint32(242).fork()).ldelim();
+        if (message.g_bool != null && message.hasOwnProperty("g_bool"))
+            writer.uint32(8).bool(message.g_bool);
+        if (message.g_int != null && message.hasOwnProperty("g_int"))
+            writer.uint32(16).sint64(message.g_int);
+        if (message.g_string != null && message.hasOwnProperty("g_string"))
+            writer.uint32(26).string(message.g_string);
+        if (message.g_uri != null && message.hasOwnProperty("g_uri"))
+            writer.uint32(34).string(message.g_uri);
+        if (message.e_not_body != null && message.hasOwnProperty("e_not_body"))
+            $root.ENot.encode(message.e_not_body, writer.uint32(42).fork()).ldelim();
+        if (message.e_neg_body != null && message.hasOwnProperty("e_neg_body"))
+            $root.ENeg.encode(message.e_neg_body, writer.uint32(50).fork()).ldelim();
+        if (message.e_mult_body != null && message.hasOwnProperty("e_mult_body"))
+            $root.EMult.encode(message.e_mult_body, writer.uint32(58).fork()).ldelim();
+        if (message.e_div_body != null && message.hasOwnProperty("e_div_body"))
+            $root.EDiv.encode(message.e_div_body, writer.uint32(66).fork()).ldelim();
+        if (message.e_plus_body != null && message.hasOwnProperty("e_plus_body"))
+            $root.EPlus.encode(message.e_plus_body, writer.uint32(74).fork()).ldelim();
+        if (message.e_minus_body != null && message.hasOwnProperty("e_minus_body"))
+            $root.EMinus.encode(message.e_minus_body, writer.uint32(82).fork()).ldelim();
+        if (message.e_lt_body != null && message.hasOwnProperty("e_lt_body"))
+            $root.ELt.encode(message.e_lt_body, writer.uint32(90).fork()).ldelim();
+        if (message.e_lte_body != null && message.hasOwnProperty("e_lte_body"))
+            $root.ELte.encode(message.e_lte_body, writer.uint32(98).fork()).ldelim();
+        if (message.e_gt_body != null && message.hasOwnProperty("e_gt_body"))
+            $root.EGt.encode(message.e_gt_body, writer.uint32(106).fork()).ldelim();
+        if (message.e_gte_body != null && message.hasOwnProperty("e_gte_body"))
+            $root.EGte.encode(message.e_gte_body, writer.uint32(114).fork()).ldelim();
+        if (message.e_eq_body != null && message.hasOwnProperty("e_eq_body"))
+            $root.EEq.encode(message.e_eq_body, writer.uint32(122).fork()).ldelim();
+        if (message.e_neq_body != null && message.hasOwnProperty("e_neq_body"))
+            $root.ENeq.encode(message.e_neq_body, writer.uint32(130).fork()).ldelim();
+        if (message.e_and_body != null && message.hasOwnProperty("e_and_body"))
+            $root.EAnd.encode(message.e_and_body, writer.uint32(138).fork()).ldelim();
+        if (message.e_or_body != null && message.hasOwnProperty("e_or_body"))
+            $root.EOr.encode(message.e_or_body, writer.uint32(146).fork()).ldelim();
+        if (message.e_var_body != null && message.hasOwnProperty("e_var_body"))
+            $root.EVar.encode(message.e_var_body, writer.uint32(154).fork()).ldelim();
+        if (message.e_list_body != null && message.hasOwnProperty("e_list_body"))
+            $root.EList.encode(message.e_list_body, writer.uint32(162).fork()).ldelim();
+        if (message.e_tuple_body != null && message.hasOwnProperty("e_tuple_body"))
+            $root.ETuple.encode(message.e_tuple_body, writer.uint32(170).fork()).ldelim();
+        if (message.e_set_body != null && message.hasOwnProperty("e_set_body"))
+            $root.ESet.encode(message.e_set_body, writer.uint32(178).fork()).ldelim();
+        if (message.e_map_body != null && message.hasOwnProperty("e_map_body"))
+            $root.EMap.encode(message.e_map_body, writer.uint32(186).fork()).ldelim();
+        if (message.e_method_body != null && message.hasOwnProperty("e_method_body"))
+            $root.EMethod.encode(message.e_method_body, writer.uint32(194).fork()).ldelim();
+        if (message.g_byte_array != null && message.hasOwnProperty("g_byte_array"))
+            writer.uint32(202).bytes(message.g_byte_array);
+        if (message.e_eval_body != null && message.hasOwnProperty("e_eval_body"))
+            $root.Channel.encode(message.e_eval_body, writer.uint32(210).fork()).ldelim();
+        if (message.e_matches_body != null && message.hasOwnProperty("e_matches_body"))
+            $root.EMatches.encode(message.e_matches_body, writer.uint32(218).fork()).ldelim();
+        if (message.e_percent_percent_body != null && message.hasOwnProperty("e_percent_percent_body"))
+            $root.EPercentPercent.encode(message.e_percent_percent_body, writer.uint32(226).fork()).ldelim();
+        if (message.e_plus_plus_body != null && message.hasOwnProperty("e_plus_plus_body"))
+            $root.EPlusPlus.encode(message.e_plus_plus_body, writer.uint32(234).fork()).ldelim();
+        if (message.e_minus_minus_body != null && message.hasOwnProperty("e_minus_minus_body"))
+            $root.EMinusMinus.encode(message.e_minus_minus_body, writer.uint32(242).fork()).ldelim();
         return writer;
     };
 
@@ -2748,94 +2747,94 @@ export const Expr = $root.Expr = (() => {
             let tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.gBool = reader.bool();
+                message.g_bool = reader.bool();
                 break;
             case 2:
-                message.gInt = reader.sint64();
+                message.g_int = reader.sint64();
                 break;
             case 3:
-                message.gString = reader.string();
+                message.g_string = reader.string();
                 break;
             case 4:
-                message.gUri = reader.string();
+                message.g_uri = reader.string();
                 break;
             case 25:
-                message.gByteArray = reader.bytes();
+                message.g_byte_array = reader.bytes();
                 break;
             case 5:
-                message.eNotBody = $root.ENot.decode(reader, reader.uint32());
+                message.e_not_body = $root.ENot.decode(reader, reader.uint32());
                 break;
             case 6:
-                message.eNegBody = $root.ENeg.decode(reader, reader.uint32());
+                message.e_neg_body = $root.ENeg.decode(reader, reader.uint32());
                 break;
             case 7:
-                message.eMultBody = $root.EMult.decode(reader, reader.uint32());
+                message.e_mult_body = $root.EMult.decode(reader, reader.uint32());
                 break;
             case 8:
-                message.eDivBody = $root.EDiv.decode(reader, reader.uint32());
+                message.e_div_body = $root.EDiv.decode(reader, reader.uint32());
                 break;
             case 9:
-                message.ePlusBody = $root.EPlus.decode(reader, reader.uint32());
+                message.e_plus_body = $root.EPlus.decode(reader, reader.uint32());
                 break;
             case 10:
-                message.eMinusBody = $root.EMinus.decode(reader, reader.uint32());
+                message.e_minus_body = $root.EMinus.decode(reader, reader.uint32());
                 break;
             case 11:
-                message.eLtBody = $root.ELt.decode(reader, reader.uint32());
+                message.e_lt_body = $root.ELt.decode(reader, reader.uint32());
                 break;
             case 12:
-                message.eLteBody = $root.ELte.decode(reader, reader.uint32());
+                message.e_lte_body = $root.ELte.decode(reader, reader.uint32());
                 break;
             case 13:
-                message.eGtBody = $root.EGt.decode(reader, reader.uint32());
+                message.e_gt_body = $root.EGt.decode(reader, reader.uint32());
                 break;
             case 14:
-                message.eGteBody = $root.EGte.decode(reader, reader.uint32());
+                message.e_gte_body = $root.EGte.decode(reader, reader.uint32());
                 break;
             case 15:
-                message.eEqBody = $root.EEq.decode(reader, reader.uint32());
+                message.e_eq_body = $root.EEq.decode(reader, reader.uint32());
                 break;
             case 16:
-                message.eNeqBody = $root.ENeq.decode(reader, reader.uint32());
+                message.e_neq_body = $root.ENeq.decode(reader, reader.uint32());
                 break;
             case 17:
-                message.eAndBody = $root.EAnd.decode(reader, reader.uint32());
+                message.e_and_body = $root.EAnd.decode(reader, reader.uint32());
                 break;
             case 18:
-                message.eOrBody = $root.EOr.decode(reader, reader.uint32());
+                message.e_or_body = $root.EOr.decode(reader, reader.uint32());
                 break;
             case 19:
-                message.eVarBody = $root.EVar.decode(reader, reader.uint32());
+                message.e_var_body = $root.EVar.decode(reader, reader.uint32());
                 break;
             case 20:
-                message.eListBody = $root.EList.decode(reader, reader.uint32());
+                message.e_list_body = $root.EList.decode(reader, reader.uint32());
                 break;
             case 21:
-                message.eTupleBody = $root.ETuple.decode(reader, reader.uint32());
+                message.e_tuple_body = $root.ETuple.decode(reader, reader.uint32());
                 break;
             case 22:
-                message.eSetBody = $root.ESet.decode(reader, reader.uint32());
+                message.e_set_body = $root.ESet.decode(reader, reader.uint32());
                 break;
             case 23:
-                message.eMapBody = $root.EMap.decode(reader, reader.uint32());
+                message.e_map_body = $root.EMap.decode(reader, reader.uint32());
                 break;
             case 24:
-                message.eMethodBody = $root.EMethod.decode(reader, reader.uint32());
+                message.e_method_body = $root.EMethod.decode(reader, reader.uint32());
                 break;
             case 26:
-                message.eEvalBody = $root.Channel.decode(reader, reader.uint32());
+                message.e_eval_body = $root.Channel.decode(reader, reader.uint32());
                 break;
             case 27:
-                message.eMatchesBody = $root.EMatches.decode(reader, reader.uint32());
+                message.e_matches_body = $root.EMatches.decode(reader, reader.uint32());
                 break;
             case 28:
-                message.ePercentPercentBody = $root.EPercentPercent.decode(reader, reader.uint32());
+                message.e_percent_percent_body = $root.EPercentPercent.decode(reader, reader.uint32());
                 break;
             case 29:
-                message.ePlusPlusBody = $root.EPlusPlus.decode(reader, reader.uint32());
+                message.e_plus_plus_body = $root.EPlusPlus.decode(reader, reader.uint32());
                 break;
             case 30:
-                message.eMinusMinusBody = $root.EMinusMinus.decode(reader, reader.uint32());
+                message.e_minus_minus_body = $root.EMinusMinus.decode(reader, reader.uint32());
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -2855,287 +2854,287 @@ export const Expr = $root.Expr = (() => {
         if (typeof message !== "object" || message === null)
             return "object expected";
         let properties = {};
-        if (message.gBool != null && message.hasOwnProperty("gBool")) {
-            properties.exprInstance = 1;
-            if (typeof message.gBool !== "boolean")
-                return "gBool: boolean expected";
+        if (message.g_bool != null && message.hasOwnProperty("g_bool")) {
+            properties.expr_instance = 1;
+            if (typeof message.g_bool !== "boolean")
+                return "g_bool: boolean expected";
         }
-        if (message.gInt != null && message.hasOwnProperty("gInt")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
-            if (!$util.isInteger(message.gInt) && !(message.gInt && $util.isInteger(message.gInt.low) && $util.isInteger(message.gInt.high)))
-                return "gInt: integer|Long expected";
+        if (message.g_int != null && message.hasOwnProperty("g_int")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
+            if (!$util.isInteger(message.g_int) && !(message.g_int && $util.isInteger(message.g_int.low) && $util.isInteger(message.g_int.high)))
+                return "g_int: integer|Long expected";
         }
-        if (message.gString != null && message.hasOwnProperty("gString")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
-            if (!$util.isString(message.gString))
-                return "gString: string expected";
+        if (message.g_string != null && message.hasOwnProperty("g_string")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
+            if (!$util.isString(message.g_string))
+                return "g_string: string expected";
         }
-        if (message.gUri != null && message.hasOwnProperty("gUri")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
-            if (!$util.isString(message.gUri))
-                return "gUri: string expected";
+        if (message.g_uri != null && message.hasOwnProperty("g_uri")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
+            if (!$util.isString(message.g_uri))
+                return "g_uri: string expected";
         }
-        if (message.gByteArray != null && message.hasOwnProperty("gByteArray")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
-            if (!(message.gByteArray && typeof message.gByteArray.length === "number" || $util.isString(message.gByteArray)))
-                return "gByteArray: buffer expected";
+        if (message.g_byte_array != null && message.hasOwnProperty("g_byte_array")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
+            if (!(message.g_byte_array && typeof message.g_byte_array.length === "number" || $util.isString(message.g_byte_array)))
+                return "g_byte_array: buffer expected";
         }
-        if (message.eNotBody != null && message.hasOwnProperty("eNotBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_not_body != null && message.hasOwnProperty("e_not_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ENot.verify(message.eNotBody);
+                let error = $root.ENot.verify(message.e_not_body);
                 if (error)
-                    return "eNotBody." + error;
+                    return "e_not_body." + error;
             }
         }
-        if (message.eNegBody != null && message.hasOwnProperty("eNegBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_neg_body != null && message.hasOwnProperty("e_neg_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ENeg.verify(message.eNegBody);
+                let error = $root.ENeg.verify(message.e_neg_body);
                 if (error)
-                    return "eNegBody." + error;
+                    return "e_neg_body." + error;
             }
         }
-        if (message.eMultBody != null && message.hasOwnProperty("eMultBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_mult_body != null && message.hasOwnProperty("e_mult_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EMult.verify(message.eMultBody);
+                let error = $root.EMult.verify(message.e_mult_body);
                 if (error)
-                    return "eMultBody." + error;
+                    return "e_mult_body." + error;
             }
         }
-        if (message.eDivBody != null && message.hasOwnProperty("eDivBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_div_body != null && message.hasOwnProperty("e_div_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EDiv.verify(message.eDivBody);
+                let error = $root.EDiv.verify(message.e_div_body);
                 if (error)
-                    return "eDivBody." + error;
+                    return "e_div_body." + error;
             }
         }
-        if (message.ePlusBody != null && message.hasOwnProperty("ePlusBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_plus_body != null && message.hasOwnProperty("e_plus_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EPlus.verify(message.ePlusBody);
+                let error = $root.EPlus.verify(message.e_plus_body);
                 if (error)
-                    return "ePlusBody." + error;
+                    return "e_plus_body." + error;
             }
         }
-        if (message.eMinusBody != null && message.hasOwnProperty("eMinusBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_minus_body != null && message.hasOwnProperty("e_minus_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EMinus.verify(message.eMinusBody);
+                let error = $root.EMinus.verify(message.e_minus_body);
                 if (error)
-                    return "eMinusBody." + error;
+                    return "e_minus_body." + error;
             }
         }
-        if (message.eLtBody != null && message.hasOwnProperty("eLtBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_lt_body != null && message.hasOwnProperty("e_lt_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ELt.verify(message.eLtBody);
+                let error = $root.ELt.verify(message.e_lt_body);
                 if (error)
-                    return "eLtBody." + error;
+                    return "e_lt_body." + error;
             }
         }
-        if (message.eLteBody != null && message.hasOwnProperty("eLteBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_lte_body != null && message.hasOwnProperty("e_lte_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ELte.verify(message.eLteBody);
+                let error = $root.ELte.verify(message.e_lte_body);
                 if (error)
-                    return "eLteBody." + error;
+                    return "e_lte_body." + error;
             }
         }
-        if (message.eGtBody != null && message.hasOwnProperty("eGtBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_gt_body != null && message.hasOwnProperty("e_gt_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EGt.verify(message.eGtBody);
+                let error = $root.EGt.verify(message.e_gt_body);
                 if (error)
-                    return "eGtBody." + error;
+                    return "e_gt_body." + error;
             }
         }
-        if (message.eGteBody != null && message.hasOwnProperty("eGteBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_gte_body != null && message.hasOwnProperty("e_gte_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EGte.verify(message.eGteBody);
+                let error = $root.EGte.verify(message.e_gte_body);
                 if (error)
-                    return "eGteBody." + error;
+                    return "e_gte_body." + error;
             }
         }
-        if (message.eEqBody != null && message.hasOwnProperty("eEqBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_eq_body != null && message.hasOwnProperty("e_eq_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EEq.verify(message.eEqBody);
+                let error = $root.EEq.verify(message.e_eq_body);
                 if (error)
-                    return "eEqBody." + error;
+                    return "e_eq_body." + error;
             }
         }
-        if (message.eNeqBody != null && message.hasOwnProperty("eNeqBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_neq_body != null && message.hasOwnProperty("e_neq_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ENeq.verify(message.eNeqBody);
+                let error = $root.ENeq.verify(message.e_neq_body);
                 if (error)
-                    return "eNeqBody." + error;
+                    return "e_neq_body." + error;
             }
         }
-        if (message.eAndBody != null && message.hasOwnProperty("eAndBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_and_body != null && message.hasOwnProperty("e_and_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EAnd.verify(message.eAndBody);
+                let error = $root.EAnd.verify(message.e_and_body);
                 if (error)
-                    return "eAndBody." + error;
+                    return "e_and_body." + error;
             }
         }
-        if (message.eOrBody != null && message.hasOwnProperty("eOrBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_or_body != null && message.hasOwnProperty("e_or_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EOr.verify(message.eOrBody);
+                let error = $root.EOr.verify(message.e_or_body);
                 if (error)
-                    return "eOrBody." + error;
+                    return "e_or_body." + error;
             }
         }
-        if (message.eVarBody != null && message.hasOwnProperty("eVarBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_var_body != null && message.hasOwnProperty("e_var_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EVar.verify(message.eVarBody);
+                let error = $root.EVar.verify(message.e_var_body);
                 if (error)
-                    return "eVarBody." + error;
+                    return "e_var_body." + error;
             }
         }
-        if (message.eListBody != null && message.hasOwnProperty("eListBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_list_body != null && message.hasOwnProperty("e_list_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EList.verify(message.eListBody);
+                let error = $root.EList.verify(message.e_list_body);
                 if (error)
-                    return "eListBody." + error;
+                    return "e_list_body." + error;
             }
         }
-        if (message.eTupleBody != null && message.hasOwnProperty("eTupleBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_tuple_body != null && message.hasOwnProperty("e_tuple_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ETuple.verify(message.eTupleBody);
+                let error = $root.ETuple.verify(message.e_tuple_body);
                 if (error)
-                    return "eTupleBody." + error;
+                    return "e_tuple_body." + error;
             }
         }
-        if (message.eSetBody != null && message.hasOwnProperty("eSetBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_set_body != null && message.hasOwnProperty("e_set_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.ESet.verify(message.eSetBody);
+                let error = $root.ESet.verify(message.e_set_body);
                 if (error)
-                    return "eSetBody." + error;
+                    return "e_set_body." + error;
             }
         }
-        if (message.eMapBody != null && message.hasOwnProperty("eMapBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_map_body != null && message.hasOwnProperty("e_map_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EMap.verify(message.eMapBody);
+                let error = $root.EMap.verify(message.e_map_body);
                 if (error)
-                    return "eMapBody." + error;
+                    return "e_map_body." + error;
             }
         }
-        if (message.eMethodBody != null && message.hasOwnProperty("eMethodBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_method_body != null && message.hasOwnProperty("e_method_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EMethod.verify(message.eMethodBody);
+                let error = $root.EMethod.verify(message.e_method_body);
                 if (error)
-                    return "eMethodBody." + error;
+                    return "e_method_body." + error;
             }
         }
-        if (message.eEvalBody != null && message.hasOwnProperty("eEvalBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_eval_body != null && message.hasOwnProperty("e_eval_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.Channel.verify(message.eEvalBody);
+                let error = $root.Channel.verify(message.e_eval_body);
                 if (error)
-                    return "eEvalBody." + error;
+                    return "e_eval_body." + error;
             }
         }
-        if (message.eMatchesBody != null && message.hasOwnProperty("eMatchesBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_matches_body != null && message.hasOwnProperty("e_matches_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EMatches.verify(message.eMatchesBody);
+                let error = $root.EMatches.verify(message.e_matches_body);
                 if (error)
-                    return "eMatchesBody." + error;
+                    return "e_matches_body." + error;
             }
         }
-        if (message.ePercentPercentBody != null && message.hasOwnProperty("ePercentPercentBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_percent_percent_body != null && message.hasOwnProperty("e_percent_percent_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EPercentPercent.verify(message.ePercentPercentBody);
+                let error = $root.EPercentPercent.verify(message.e_percent_percent_body);
                 if (error)
-                    return "ePercentPercentBody." + error;
+                    return "e_percent_percent_body." + error;
             }
         }
-        if (message.ePlusPlusBody != null && message.hasOwnProperty("ePlusPlusBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_plus_plus_body != null && message.hasOwnProperty("e_plus_plus_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EPlusPlus.verify(message.ePlusPlusBody);
+                let error = $root.EPlusPlus.verify(message.e_plus_plus_body);
                 if (error)
-                    return "ePlusPlusBody." + error;
+                    return "e_plus_plus_body." + error;
             }
         }
-        if (message.eMinusMinusBody != null && message.hasOwnProperty("eMinusMinusBody")) {
-            if (properties.exprInstance === 1)
-                return "exprInstance: multiple values";
-            properties.exprInstance = 1;
+        if (message.e_minus_minus_body != null && message.hasOwnProperty("e_minus_minus_body")) {
+            if (properties.expr_instance === 1)
+                return "expr_instance: multiple values";
+            properties.expr_instance = 1;
             {
-                let error = $root.EMinusMinus.verify(message.eMinusMinusBody);
+                let error = $root.EMinusMinus.verify(message.e_minus_minus_body);
                 if (error)
-                    return "eMinusMinusBody." + error;
+                    return "e_minus_minus_body." + error;
             }
         }
         return null;
@@ -3145,150 +3144,150 @@ export const Expr = $root.Expr = (() => {
         if (object instanceof $root.Expr)
             return object;
         let message = new $root.Expr();
-        if (object.gBool != null)
-            message.gBool = Boolean(object.gBool);
-        if (object.gInt != null)
+        if (object.g_bool != null)
+            message.g_bool = Boolean(object.g_bool);
+        if (object.g_int != null)
             if ($util.Long)
-                (message.gInt = $util.Long.fromValue(object.gInt)).unsigned = false;
-            else if (typeof object.gInt === "string")
-                message.gInt = parseInt(object.gInt, 10);
-            else if (typeof object.gInt === "number")
-                message.gInt = object.gInt;
-            else if (typeof object.gInt === "object")
-                message.gInt = new $util.LongBits(object.gInt.low >>> 0, object.gInt.high >>> 0).toNumber();
-        if (object.gString != null)
-            message.gString = String(object.gString);
-        if (object.gUri != null)
-            message.gUri = String(object.gUri);
-        if (object.gByteArray != null)
-            if (typeof object.gByteArray === "string")
-                $util.base64.decode(object.gByteArray, message.gByteArray = $util.newBuffer($util.base64.length(object.gByteArray)), 0);
-            else if (object.gByteArray.length)
-                message.gByteArray = object.gByteArray;
-        if (object.eNotBody != null) {
-            if (typeof object.eNotBody !== "object")
-                throw TypeError(".Expr.eNotBody: object expected");
-            message.eNotBody = $root.ENot.fromObject(object.eNotBody);
+                (message.g_int = $util.Long.fromValue(object.g_int)).unsigned = false;
+            else if (typeof object.g_int === "string")
+                message.g_int = parseInt(object.g_int, 10);
+            else if (typeof object.g_int === "number")
+                message.g_int = object.g_int;
+            else if (typeof object.g_int === "object")
+                message.g_int = new $util.LongBits(object.g_int.low >>> 0, object.g_int.high >>> 0).toNumber();
+        if (object.g_string != null)
+            message.g_string = String(object.g_string);
+        if (object.g_uri != null)
+            message.g_uri = String(object.g_uri);
+        if (object.g_byte_array != null)
+            if (typeof object.g_byte_array === "string")
+                $util.base64.decode(object.g_byte_array, message.g_byte_array = $util.newBuffer($util.base64.length(object.g_byte_array)), 0);
+            else if (object.g_byte_array.length)
+                message.g_byte_array = object.g_byte_array;
+        if (object.e_not_body != null) {
+            if (typeof object.e_not_body !== "object")
+                throw TypeError(".Expr.e_not_body: object expected");
+            message.e_not_body = $root.ENot.fromObject(object.e_not_body);
         }
-        if (object.eNegBody != null) {
-            if (typeof object.eNegBody !== "object")
-                throw TypeError(".Expr.eNegBody: object expected");
-            message.eNegBody = $root.ENeg.fromObject(object.eNegBody);
+        if (object.e_neg_body != null) {
+            if (typeof object.e_neg_body !== "object")
+                throw TypeError(".Expr.e_neg_body: object expected");
+            message.e_neg_body = $root.ENeg.fromObject(object.e_neg_body);
         }
-        if (object.eMultBody != null) {
-            if (typeof object.eMultBody !== "object")
-                throw TypeError(".Expr.eMultBody: object expected");
-            message.eMultBody = $root.EMult.fromObject(object.eMultBody);
+        if (object.e_mult_body != null) {
+            if (typeof object.e_mult_body !== "object")
+                throw TypeError(".Expr.e_mult_body: object expected");
+            message.e_mult_body = $root.EMult.fromObject(object.e_mult_body);
         }
-        if (object.eDivBody != null) {
-            if (typeof object.eDivBody !== "object")
-                throw TypeError(".Expr.eDivBody: object expected");
-            message.eDivBody = $root.EDiv.fromObject(object.eDivBody);
+        if (object.e_div_body != null) {
+            if (typeof object.e_div_body !== "object")
+                throw TypeError(".Expr.e_div_body: object expected");
+            message.e_div_body = $root.EDiv.fromObject(object.e_div_body);
         }
-        if (object.ePlusBody != null) {
-            if (typeof object.ePlusBody !== "object")
-                throw TypeError(".Expr.ePlusBody: object expected");
-            message.ePlusBody = $root.EPlus.fromObject(object.ePlusBody);
+        if (object.e_plus_body != null) {
+            if (typeof object.e_plus_body !== "object")
+                throw TypeError(".Expr.e_plus_body: object expected");
+            message.e_plus_body = $root.EPlus.fromObject(object.e_plus_body);
         }
-        if (object.eMinusBody != null) {
-            if (typeof object.eMinusBody !== "object")
-                throw TypeError(".Expr.eMinusBody: object expected");
-            message.eMinusBody = $root.EMinus.fromObject(object.eMinusBody);
+        if (object.e_minus_body != null) {
+            if (typeof object.e_minus_body !== "object")
+                throw TypeError(".Expr.e_minus_body: object expected");
+            message.e_minus_body = $root.EMinus.fromObject(object.e_minus_body);
         }
-        if (object.eLtBody != null) {
-            if (typeof object.eLtBody !== "object")
-                throw TypeError(".Expr.eLtBody: object expected");
-            message.eLtBody = $root.ELt.fromObject(object.eLtBody);
+        if (object.e_lt_body != null) {
+            if (typeof object.e_lt_body !== "object")
+                throw TypeError(".Expr.e_lt_body: object expected");
+            message.e_lt_body = $root.ELt.fromObject(object.e_lt_body);
         }
-        if (object.eLteBody != null) {
-            if (typeof object.eLteBody !== "object")
-                throw TypeError(".Expr.eLteBody: object expected");
-            message.eLteBody = $root.ELte.fromObject(object.eLteBody);
+        if (object.e_lte_body != null) {
+            if (typeof object.e_lte_body !== "object")
+                throw TypeError(".Expr.e_lte_body: object expected");
+            message.e_lte_body = $root.ELte.fromObject(object.e_lte_body);
         }
-        if (object.eGtBody != null) {
-            if (typeof object.eGtBody !== "object")
-                throw TypeError(".Expr.eGtBody: object expected");
-            message.eGtBody = $root.EGt.fromObject(object.eGtBody);
+        if (object.e_gt_body != null) {
+            if (typeof object.e_gt_body !== "object")
+                throw TypeError(".Expr.e_gt_body: object expected");
+            message.e_gt_body = $root.EGt.fromObject(object.e_gt_body);
         }
-        if (object.eGteBody != null) {
-            if (typeof object.eGteBody !== "object")
-                throw TypeError(".Expr.eGteBody: object expected");
-            message.eGteBody = $root.EGte.fromObject(object.eGteBody);
+        if (object.e_gte_body != null) {
+            if (typeof object.e_gte_body !== "object")
+                throw TypeError(".Expr.e_gte_body: object expected");
+            message.e_gte_body = $root.EGte.fromObject(object.e_gte_body);
         }
-        if (object.eEqBody != null) {
-            if (typeof object.eEqBody !== "object")
-                throw TypeError(".Expr.eEqBody: object expected");
-            message.eEqBody = $root.EEq.fromObject(object.eEqBody);
+        if (object.e_eq_body != null) {
+            if (typeof object.e_eq_body !== "object")
+                throw TypeError(".Expr.e_eq_body: object expected");
+            message.e_eq_body = $root.EEq.fromObject(object.e_eq_body);
         }
-        if (object.eNeqBody != null) {
-            if (typeof object.eNeqBody !== "object")
-                throw TypeError(".Expr.eNeqBody: object expected");
-            message.eNeqBody = $root.ENeq.fromObject(object.eNeqBody);
+        if (object.e_neq_body != null) {
+            if (typeof object.e_neq_body !== "object")
+                throw TypeError(".Expr.e_neq_body: object expected");
+            message.e_neq_body = $root.ENeq.fromObject(object.e_neq_body);
         }
-        if (object.eAndBody != null) {
-            if (typeof object.eAndBody !== "object")
-                throw TypeError(".Expr.eAndBody: object expected");
-            message.eAndBody = $root.EAnd.fromObject(object.eAndBody);
+        if (object.e_and_body != null) {
+            if (typeof object.e_and_body !== "object")
+                throw TypeError(".Expr.e_and_body: object expected");
+            message.e_and_body = $root.EAnd.fromObject(object.e_and_body);
         }
-        if (object.eOrBody != null) {
-            if (typeof object.eOrBody !== "object")
-                throw TypeError(".Expr.eOrBody: object expected");
-            message.eOrBody = $root.EOr.fromObject(object.eOrBody);
+        if (object.e_or_body != null) {
+            if (typeof object.e_or_body !== "object")
+                throw TypeError(".Expr.e_or_body: object expected");
+            message.e_or_body = $root.EOr.fromObject(object.e_or_body);
         }
-        if (object.eVarBody != null) {
-            if (typeof object.eVarBody !== "object")
-                throw TypeError(".Expr.eVarBody: object expected");
-            message.eVarBody = $root.EVar.fromObject(object.eVarBody);
+        if (object.e_var_body != null) {
+            if (typeof object.e_var_body !== "object")
+                throw TypeError(".Expr.e_var_body: object expected");
+            message.e_var_body = $root.EVar.fromObject(object.e_var_body);
         }
-        if (object.eListBody != null) {
-            if (typeof object.eListBody !== "object")
-                throw TypeError(".Expr.eListBody: object expected");
-            message.eListBody = $root.EList.fromObject(object.eListBody);
+        if (object.e_list_body != null) {
+            if (typeof object.e_list_body !== "object")
+                throw TypeError(".Expr.e_list_body: object expected");
+            message.e_list_body = $root.EList.fromObject(object.e_list_body);
         }
-        if (object.eTupleBody != null) {
-            if (typeof object.eTupleBody !== "object")
-                throw TypeError(".Expr.eTupleBody: object expected");
-            message.eTupleBody = $root.ETuple.fromObject(object.eTupleBody);
+        if (object.e_tuple_body != null) {
+            if (typeof object.e_tuple_body !== "object")
+                throw TypeError(".Expr.e_tuple_body: object expected");
+            message.e_tuple_body = $root.ETuple.fromObject(object.e_tuple_body);
         }
-        if (object.eSetBody != null) {
-            if (typeof object.eSetBody !== "object")
-                throw TypeError(".Expr.eSetBody: object expected");
-            message.eSetBody = $root.ESet.fromObject(object.eSetBody);
+        if (object.e_set_body != null) {
+            if (typeof object.e_set_body !== "object")
+                throw TypeError(".Expr.e_set_body: object expected");
+            message.e_set_body = $root.ESet.fromObject(object.e_set_body);
         }
-        if (object.eMapBody != null) {
-            if (typeof object.eMapBody !== "object")
-                throw TypeError(".Expr.eMapBody: object expected");
-            message.eMapBody = $root.EMap.fromObject(object.eMapBody);
+        if (object.e_map_body != null) {
+            if (typeof object.e_map_body !== "object")
+                throw TypeError(".Expr.e_map_body: object expected");
+            message.e_map_body = $root.EMap.fromObject(object.e_map_body);
         }
-        if (object.eMethodBody != null) {
-            if (typeof object.eMethodBody !== "object")
-                throw TypeError(".Expr.eMethodBody: object expected");
-            message.eMethodBody = $root.EMethod.fromObject(object.eMethodBody);
+        if (object.e_method_body != null) {
+            if (typeof object.e_method_body !== "object")
+                throw TypeError(".Expr.e_method_body: object expected");
+            message.e_method_body = $root.EMethod.fromObject(object.e_method_body);
         }
-        if (object.eEvalBody != null) {
-            if (typeof object.eEvalBody !== "object")
-                throw TypeError(".Expr.eEvalBody: object expected");
-            message.eEvalBody = $root.Channel.fromObject(object.eEvalBody);
+        if (object.e_eval_body != null) {
+            if (typeof object.e_eval_body !== "object")
+                throw TypeError(".Expr.e_eval_body: object expected");
+            message.e_eval_body = $root.Channel.fromObject(object.e_eval_body);
         }
-        if (object.eMatchesBody != null) {
-            if (typeof object.eMatchesBody !== "object")
-                throw TypeError(".Expr.eMatchesBody: object expected");
-            message.eMatchesBody = $root.EMatches.fromObject(object.eMatchesBody);
+        if (object.e_matches_body != null) {
+            if (typeof object.e_matches_body !== "object")
+                throw TypeError(".Expr.e_matches_body: object expected");
+            message.e_matches_body = $root.EMatches.fromObject(object.e_matches_body);
         }
-        if (object.ePercentPercentBody != null) {
-            if (typeof object.ePercentPercentBody !== "object")
-                throw TypeError(".Expr.ePercentPercentBody: object expected");
-            message.ePercentPercentBody = $root.EPercentPercent.fromObject(object.ePercentPercentBody);
+        if (object.e_percent_percent_body != null) {
+            if (typeof object.e_percent_percent_body !== "object")
+                throw TypeError(".Expr.e_percent_percent_body: object expected");
+            message.e_percent_percent_body = $root.EPercentPercent.fromObject(object.e_percent_percent_body);
         }
-        if (object.ePlusPlusBody != null) {
-            if (typeof object.ePlusPlusBody !== "object")
-                throw TypeError(".Expr.ePlusPlusBody: object expected");
-            message.ePlusPlusBody = $root.EPlusPlus.fromObject(object.ePlusPlusBody);
+        if (object.e_plus_plus_body != null) {
+            if (typeof object.e_plus_plus_body !== "object")
+                throw TypeError(".Expr.e_plus_plus_body: object expected");
+            message.e_plus_plus_body = $root.EPlusPlus.fromObject(object.e_plus_plus_body);
         }
-        if (object.eMinusMinusBody != null) {
-            if (typeof object.eMinusMinusBody !== "object")
-                throw TypeError(".Expr.eMinusMinusBody: object expected");
-            message.eMinusMinusBody = $root.EMinusMinus.fromObject(object.eMinusMinusBody);
+        if (object.e_minus_minus_body != null) {
+            if (typeof object.e_minus_minus_body !== "object")
+                throw TypeError(".Expr.e_minus_minus_body: object expected");
+            message.e_minus_minus_body = $root.EMinusMinus.fromObject(object.e_minus_minus_body);
         }
         return message;
     };
@@ -3297,158 +3296,158 @@ export const Expr = $root.Expr = (() => {
         if (!options)
             options = {};
         let object = {};
-        if (message.gBool != null && message.hasOwnProperty("gBool")) {
-            object.gBool = message.gBool;
+        if (message.g_bool != null && message.hasOwnProperty("g_bool")) {
+            object.g_bool = message.g_bool;
             if (options.oneofs)
-                object.exprInstance = "gBool";
+                object.expr_instance = "g_bool";
         }
-        if (message.gInt != null && message.hasOwnProperty("gInt")) {
-            if (typeof message.gInt === "number")
-                object.gInt = options.longs === String ? String(message.gInt) : message.gInt;
+        if (message.g_int != null && message.hasOwnProperty("g_int")) {
+            if (typeof message.g_int === "number")
+                object.g_int = options.longs === String ? String(message.g_int) : message.g_int;
             else
-                object.gInt = options.longs === String ? $util.Long.prototype.toString.call(message.gInt) : options.longs === Number ? new $util.LongBits(message.gInt.low >>> 0, message.gInt.high >>> 0).toNumber() : message.gInt;
+                object.g_int = options.longs === String ? $util.Long.prototype.toString.call(message.g_int) : options.longs === Number ? new $util.LongBits(message.g_int.low >>> 0, message.g_int.high >>> 0).toNumber() : message.g_int;
             if (options.oneofs)
-                object.exprInstance = "gInt";
+                object.expr_instance = "g_int";
         }
-        if (message.gString != null && message.hasOwnProperty("gString")) {
-            object.gString = message.gString;
+        if (message.g_string != null && message.hasOwnProperty("g_string")) {
+            object.g_string = message.g_string;
             if (options.oneofs)
-                object.exprInstance = "gString";
+                object.expr_instance = "g_string";
         }
-        if (message.gUri != null && message.hasOwnProperty("gUri")) {
-            object.gUri = message.gUri;
+        if (message.g_uri != null && message.hasOwnProperty("g_uri")) {
+            object.g_uri = message.g_uri;
             if (options.oneofs)
-                object.exprInstance = "gUri";
+                object.expr_instance = "g_uri";
         }
-        if (message.eNotBody != null && message.hasOwnProperty("eNotBody")) {
-            object.eNotBody = $root.ENot.toObject(message.eNotBody, options);
+        if (message.e_not_body != null && message.hasOwnProperty("e_not_body")) {
+            object.e_not_body = $root.ENot.toObject(message.e_not_body, options);
             if (options.oneofs)
-                object.exprInstance = "eNotBody";
+                object.expr_instance = "e_not_body";
         }
-        if (message.eNegBody != null && message.hasOwnProperty("eNegBody")) {
-            object.eNegBody = $root.ENeg.toObject(message.eNegBody, options);
+        if (message.e_neg_body != null && message.hasOwnProperty("e_neg_body")) {
+            object.e_neg_body = $root.ENeg.toObject(message.e_neg_body, options);
             if (options.oneofs)
-                object.exprInstance = "eNegBody";
+                object.expr_instance = "e_neg_body";
         }
-        if (message.eMultBody != null && message.hasOwnProperty("eMultBody")) {
-            object.eMultBody = $root.EMult.toObject(message.eMultBody, options);
+        if (message.e_mult_body != null && message.hasOwnProperty("e_mult_body")) {
+            object.e_mult_body = $root.EMult.toObject(message.e_mult_body, options);
             if (options.oneofs)
-                object.exprInstance = "eMultBody";
+                object.expr_instance = "e_mult_body";
         }
-        if (message.eDivBody != null && message.hasOwnProperty("eDivBody")) {
-            object.eDivBody = $root.EDiv.toObject(message.eDivBody, options);
+        if (message.e_div_body != null && message.hasOwnProperty("e_div_body")) {
+            object.e_div_body = $root.EDiv.toObject(message.e_div_body, options);
             if (options.oneofs)
-                object.exprInstance = "eDivBody";
+                object.expr_instance = "e_div_body";
         }
-        if (message.ePlusBody != null && message.hasOwnProperty("ePlusBody")) {
-            object.ePlusBody = $root.EPlus.toObject(message.ePlusBody, options);
+        if (message.e_plus_body != null && message.hasOwnProperty("e_plus_body")) {
+            object.e_plus_body = $root.EPlus.toObject(message.e_plus_body, options);
             if (options.oneofs)
-                object.exprInstance = "ePlusBody";
+                object.expr_instance = "e_plus_body";
         }
-        if (message.eMinusBody != null && message.hasOwnProperty("eMinusBody")) {
-            object.eMinusBody = $root.EMinus.toObject(message.eMinusBody, options);
+        if (message.e_minus_body != null && message.hasOwnProperty("e_minus_body")) {
+            object.e_minus_body = $root.EMinus.toObject(message.e_minus_body, options);
             if (options.oneofs)
-                object.exprInstance = "eMinusBody";
+                object.expr_instance = "e_minus_body";
         }
-        if (message.eLtBody != null && message.hasOwnProperty("eLtBody")) {
-            object.eLtBody = $root.ELt.toObject(message.eLtBody, options);
+        if (message.e_lt_body != null && message.hasOwnProperty("e_lt_body")) {
+            object.e_lt_body = $root.ELt.toObject(message.e_lt_body, options);
             if (options.oneofs)
-                object.exprInstance = "eLtBody";
+                object.expr_instance = "e_lt_body";
         }
-        if (message.eLteBody != null && message.hasOwnProperty("eLteBody")) {
-            object.eLteBody = $root.ELte.toObject(message.eLteBody, options);
+        if (message.e_lte_body != null && message.hasOwnProperty("e_lte_body")) {
+            object.e_lte_body = $root.ELte.toObject(message.e_lte_body, options);
             if (options.oneofs)
-                object.exprInstance = "eLteBody";
+                object.expr_instance = "e_lte_body";
         }
-        if (message.eGtBody != null && message.hasOwnProperty("eGtBody")) {
-            object.eGtBody = $root.EGt.toObject(message.eGtBody, options);
+        if (message.e_gt_body != null && message.hasOwnProperty("e_gt_body")) {
+            object.e_gt_body = $root.EGt.toObject(message.e_gt_body, options);
             if (options.oneofs)
-                object.exprInstance = "eGtBody";
+                object.expr_instance = "e_gt_body";
         }
-        if (message.eGteBody != null && message.hasOwnProperty("eGteBody")) {
-            object.eGteBody = $root.EGte.toObject(message.eGteBody, options);
+        if (message.e_gte_body != null && message.hasOwnProperty("e_gte_body")) {
+            object.e_gte_body = $root.EGte.toObject(message.e_gte_body, options);
             if (options.oneofs)
-                object.exprInstance = "eGteBody";
+                object.expr_instance = "e_gte_body";
         }
-        if (message.eEqBody != null && message.hasOwnProperty("eEqBody")) {
-            object.eEqBody = $root.EEq.toObject(message.eEqBody, options);
+        if (message.e_eq_body != null && message.hasOwnProperty("e_eq_body")) {
+            object.e_eq_body = $root.EEq.toObject(message.e_eq_body, options);
             if (options.oneofs)
-                object.exprInstance = "eEqBody";
+                object.expr_instance = "e_eq_body";
         }
-        if (message.eNeqBody != null && message.hasOwnProperty("eNeqBody")) {
-            object.eNeqBody = $root.ENeq.toObject(message.eNeqBody, options);
+        if (message.e_neq_body != null && message.hasOwnProperty("e_neq_body")) {
+            object.e_neq_body = $root.ENeq.toObject(message.e_neq_body, options);
             if (options.oneofs)
-                object.exprInstance = "eNeqBody";
+                object.expr_instance = "e_neq_body";
         }
-        if (message.eAndBody != null && message.hasOwnProperty("eAndBody")) {
-            object.eAndBody = $root.EAnd.toObject(message.eAndBody, options);
+        if (message.e_and_body != null && message.hasOwnProperty("e_and_body")) {
+            object.e_and_body = $root.EAnd.toObject(message.e_and_body, options);
             if (options.oneofs)
-                object.exprInstance = "eAndBody";
+                object.expr_instance = "e_and_body";
         }
-        if (message.eOrBody != null && message.hasOwnProperty("eOrBody")) {
-            object.eOrBody = $root.EOr.toObject(message.eOrBody, options);
+        if (message.e_or_body != null && message.hasOwnProperty("e_or_body")) {
+            object.e_or_body = $root.EOr.toObject(message.e_or_body, options);
             if (options.oneofs)
-                object.exprInstance = "eOrBody";
+                object.expr_instance = "e_or_body";
         }
-        if (message.eVarBody != null && message.hasOwnProperty("eVarBody")) {
-            object.eVarBody = $root.EVar.toObject(message.eVarBody, options);
+        if (message.e_var_body != null && message.hasOwnProperty("e_var_body")) {
+            object.e_var_body = $root.EVar.toObject(message.e_var_body, options);
             if (options.oneofs)
-                object.exprInstance = "eVarBody";
+                object.expr_instance = "e_var_body";
         }
-        if (message.eListBody != null && message.hasOwnProperty("eListBody")) {
-            object.eListBody = $root.EList.toObject(message.eListBody, options);
+        if (message.e_list_body != null && message.hasOwnProperty("e_list_body")) {
+            object.e_list_body = $root.EList.toObject(message.e_list_body, options);
             if (options.oneofs)
-                object.exprInstance = "eListBody";
+                object.expr_instance = "e_list_body";
         }
-        if (message.eTupleBody != null && message.hasOwnProperty("eTupleBody")) {
-            object.eTupleBody = $root.ETuple.toObject(message.eTupleBody, options);
+        if (message.e_tuple_body != null && message.hasOwnProperty("e_tuple_body")) {
+            object.e_tuple_body = $root.ETuple.toObject(message.e_tuple_body, options);
             if (options.oneofs)
-                object.exprInstance = "eTupleBody";
+                object.expr_instance = "e_tuple_body";
         }
-        if (message.eSetBody != null && message.hasOwnProperty("eSetBody")) {
-            object.eSetBody = $root.ESet.toObject(message.eSetBody, options);
+        if (message.e_set_body != null && message.hasOwnProperty("e_set_body")) {
+            object.e_set_body = $root.ESet.toObject(message.e_set_body, options);
             if (options.oneofs)
-                object.exprInstance = "eSetBody";
+                object.expr_instance = "e_set_body";
         }
-        if (message.eMapBody != null && message.hasOwnProperty("eMapBody")) {
-            object.eMapBody = $root.EMap.toObject(message.eMapBody, options);
+        if (message.e_map_body != null && message.hasOwnProperty("e_map_body")) {
+            object.e_map_body = $root.EMap.toObject(message.e_map_body, options);
             if (options.oneofs)
-                object.exprInstance = "eMapBody";
+                object.expr_instance = "e_map_body";
         }
-        if (message.eMethodBody != null && message.hasOwnProperty("eMethodBody")) {
-            object.eMethodBody = $root.EMethod.toObject(message.eMethodBody, options);
+        if (message.e_method_body != null && message.hasOwnProperty("e_method_body")) {
+            object.e_method_body = $root.EMethod.toObject(message.e_method_body, options);
             if (options.oneofs)
-                object.exprInstance = "eMethodBody";
+                object.expr_instance = "e_method_body";
         }
-        if (message.gByteArray != null && message.hasOwnProperty("gByteArray")) {
-            object.gByteArray = options.bytes === String ? $util.base64.encode(message.gByteArray, 0, message.gByteArray.length) : options.bytes === Array ? Array.prototype.slice.call(message.gByteArray) : message.gByteArray;
+        if (message.g_byte_array != null && message.hasOwnProperty("g_byte_array")) {
+            object.g_byte_array = options.bytes === String ? $util.base64.encode(message.g_byte_array, 0, message.g_byte_array.length) : options.bytes === Array ? Array.prototype.slice.call(message.g_byte_array) : message.g_byte_array;
             if (options.oneofs)
-                object.exprInstance = "gByteArray";
+                object.expr_instance = "g_byte_array";
         }
-        if (message.eEvalBody != null && message.hasOwnProperty("eEvalBody")) {
-            object.eEvalBody = $root.Channel.toObject(message.eEvalBody, options);
+        if (message.e_eval_body != null && message.hasOwnProperty("e_eval_body")) {
+            object.e_eval_body = $root.Channel.toObject(message.e_eval_body, options);
             if (options.oneofs)
-                object.exprInstance = "eEvalBody";
+                object.expr_instance = "e_eval_body";
         }
-        if (message.eMatchesBody != null && message.hasOwnProperty("eMatchesBody")) {
-            object.eMatchesBody = $root.EMatches.toObject(message.eMatchesBody, options);
+        if (message.e_matches_body != null && message.hasOwnProperty("e_matches_body")) {
+            object.e_matches_body = $root.EMatches.toObject(message.e_matches_body, options);
             if (options.oneofs)
-                object.exprInstance = "eMatchesBody";
+                object.expr_instance = "e_matches_body";
         }
-        if (message.ePercentPercentBody != null && message.hasOwnProperty("ePercentPercentBody")) {
-            object.ePercentPercentBody = $root.EPercentPercent.toObject(message.ePercentPercentBody, options);
+        if (message.e_percent_percent_body != null && message.hasOwnProperty("e_percent_percent_body")) {
+            object.e_percent_percent_body = $root.EPercentPercent.toObject(message.e_percent_percent_body, options);
             if (options.oneofs)
-                object.exprInstance = "ePercentPercentBody";
+                object.expr_instance = "e_percent_percent_body";
         }
-        if (message.ePlusPlusBody != null && message.hasOwnProperty("ePlusPlusBody")) {
-            object.ePlusPlusBody = $root.EPlusPlus.toObject(message.ePlusPlusBody, options);
+        if (message.e_plus_plus_body != null && message.hasOwnProperty("e_plus_plus_body")) {
+            object.e_plus_plus_body = $root.EPlusPlus.toObject(message.e_plus_plus_body, options);
             if (options.oneofs)
-                object.exprInstance = "ePlusPlusBody";
+                object.expr_instance = "e_plus_plus_body";
         }
-        if (message.eMinusMinusBody != null && message.hasOwnProperty("eMinusMinusBody")) {
-            object.eMinusMinusBody = $root.EMinusMinus.toObject(message.eMinusMinusBody, options);
+        if (message.e_minus_minus_body != null && message.hasOwnProperty("e_minus_minus_body")) {
+            object.e_minus_minus_body = $root.EMinusMinus.toObject(message.e_minus_minus_body, options);
             if (options.oneofs)
-                object.exprInstance = "eMinusMinusBody";
+                object.expr_instance = "e_minus_minus_body";
         }
         return object;
     };
@@ -3472,7 +3471,7 @@ export const EList = $root.EList = (() => {
 
     EList.prototype.ps = $util.emptyArray;
     EList.prototype.locallyFree = $util.newBuffer([]);
-    EList.prototype.connectiveUsed = false;
+    EList.prototype.connective_used = false;
     EList.prototype.remainder = null;
 
     EList.create = function create(properties) {
@@ -3487,8 +3486,8 @@ export const EList = $root.EList = (() => {
                 $root.Par.encode(message.ps[i], writer.uint32(10).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(26).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(32).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(32).bool(message.connective_used);
         if (message.remainder != null && message.hasOwnProperty("remainder"))
             $root.Var.encode(message.remainder, writer.uint32(42).fork()).ldelim();
         return writer;
@@ -3514,7 +3513,7 @@ export const EList = $root.EList = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 4:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             case 5:
                 message.remainder = $root.Var.decode(reader, reader.uint32());
@@ -3548,9 +3547,9 @@ export const EList = $root.EList = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         if (message.remainder != null && message.hasOwnProperty("remainder")) {
             let error = $root.Var.verify(message.remainder);
             if (error)
@@ -3578,8 +3577,8 @@ export const EList = $root.EList = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         if (object.remainder != null) {
             if (typeof object.remainder !== "object")
                 throw TypeError(".EList.remainder: object expected");
@@ -3602,7 +3601,7 @@ export const EList = $root.EList = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
             object.remainder = null;
         }
         if (message.ps && message.ps.length) {
@@ -3612,8 +3611,8 @@ export const EList = $root.EList = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         if (message.remainder != null && message.hasOwnProperty("remainder"))
             object.remainder = $root.Var.toObject(message.remainder, options);
         return object;
@@ -3638,7 +3637,7 @@ export const ETuple = $root.ETuple = (() => {
 
     ETuple.prototype.ps = $util.emptyArray;
     ETuple.prototype.locallyFree = $util.newBuffer([]);
-    ETuple.prototype.connectiveUsed = false;
+    ETuple.prototype.connective_used = false;
 
     ETuple.create = function create(properties) {
         return new ETuple(properties);
@@ -3652,8 +3651,8 @@ export const ETuple = $root.ETuple = (() => {
                 $root.Par.encode(message.ps[i], writer.uint32(10).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(26).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(32).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(32).bool(message.connective_used);
         return writer;
     };
 
@@ -3677,7 +3676,7 @@ export const ETuple = $root.ETuple = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 4:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -3708,9 +3707,9 @@ export const ETuple = $root.ETuple = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -3733,8 +3732,8 @@ export const ETuple = $root.ETuple = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -3752,7 +3751,7 @@ export const ETuple = $root.ETuple = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.ps && message.ps.length) {
             object.ps = [];
@@ -3761,8 +3760,8 @@ export const ETuple = $root.ETuple = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         return object;
     };
 
@@ -3785,7 +3784,7 @@ export const ESet = $root.ESet = (() => {
 
     ESet.prototype.ps = $util.emptyArray;
     ESet.prototype.locallyFree = $util.newBuffer([]);
-    ESet.prototype.connectiveUsed = false;
+    ESet.prototype.connective_used = false;
     ESet.prototype.remainder = null;
 
     ESet.create = function create(properties) {
@@ -3800,8 +3799,8 @@ export const ESet = $root.ESet = (() => {
                 $root.Par.encode(message.ps[i], writer.uint32(10).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(26).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(32).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(32).bool(message.connective_used);
         if (message.remainder != null && message.hasOwnProperty("remainder"))
             $root.Var.encode(message.remainder, writer.uint32(42).fork()).ldelim();
         return writer;
@@ -3827,7 +3826,7 @@ export const ESet = $root.ESet = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 4:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             case 5:
                 message.remainder = $root.Var.decode(reader, reader.uint32());
@@ -3861,9 +3860,9 @@ export const ESet = $root.ESet = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         if (message.remainder != null && message.hasOwnProperty("remainder")) {
             let error = $root.Var.verify(message.remainder);
             if (error)
@@ -3891,8 +3890,8 @@ export const ESet = $root.ESet = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         if (object.remainder != null) {
             if (typeof object.remainder !== "object")
                 throw TypeError(".ESet.remainder: object expected");
@@ -3915,7 +3914,7 @@ export const ESet = $root.ESet = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
             object.remainder = null;
         }
         if (message.ps && message.ps.length) {
@@ -3925,8 +3924,8 @@ export const ESet = $root.ESet = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         if (message.remainder != null && message.hasOwnProperty("remainder"))
             object.remainder = $root.Var.toObject(message.remainder, options);
         return object;
@@ -3951,7 +3950,7 @@ export const EMap = $root.EMap = (() => {
 
     EMap.prototype.kvs = $util.emptyArray;
     EMap.prototype.locallyFree = $util.newBuffer([]);
-    EMap.prototype.connectiveUsed = false;
+    EMap.prototype.connective_used = false;
 
     EMap.create = function create(properties) {
         return new EMap(properties);
@@ -3965,8 +3964,8 @@ export const EMap = $root.EMap = (() => {
                 $root.KeyValuePair.encode(message.kvs[i], writer.uint32(10).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(26).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(32).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(32).bool(message.connective_used);
         return writer;
     };
 
@@ -3990,7 +3989,7 @@ export const EMap = $root.EMap = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 4:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -4021,9 +4020,9 @@ export const EMap = $root.EMap = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -4046,8 +4045,8 @@ export const EMap = $root.EMap = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -4065,7 +4064,7 @@ export const EMap = $root.EMap = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.kvs && message.kvs.length) {
             object.kvs = [];
@@ -4074,8 +4073,8 @@ export const EMap = $root.EMap = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         return object;
     };
 
@@ -4100,7 +4099,7 @@ export const EMethod = $root.EMethod = (() => {
     EMethod.prototype.target = null;
     EMethod.prototype["arguments"] = $util.emptyArray;
     EMethod.prototype.locallyFree = $util.newBuffer([]);
-    EMethod.prototype.connectiveUsed = false;
+    EMethod.prototype.connective_used = false;
 
     EMethod.create = function create(properties) {
         return new EMethod(properties);
@@ -4118,8 +4117,8 @@ export const EMethod = $root.EMethod = (() => {
                 $root.Par.encode(message["arguments"][i], writer.uint32(26).fork()).ldelim();
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             writer.uint32(42).bytes(message.locallyFree);
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            writer.uint32(48).bool(message.connectiveUsed);
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            writer.uint32(48).bool(message.connective_used);
         return writer;
     };
 
@@ -4149,7 +4148,7 @@ export const EMethod = $root.EMethod = (() => {
                 message.locallyFree = reader.bytes();
                 break;
             case 6:
-                message.connectiveUsed = reader.bool();
+                message.connective_used = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -4188,9 +4187,9 @@ export const EMethod = $root.EMethod = (() => {
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             if (!(message.locallyFree && typeof message.locallyFree.length === "number" || $util.isString(message.locallyFree)))
                 return "locallyFree: buffer expected";
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            if (typeof message.connectiveUsed !== "boolean")
-                return "connectiveUsed: boolean expected";
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            if (typeof message.connective_used !== "boolean")
+                return "connective_used: boolean expected";
         return null;
     };
 
@@ -4220,8 +4219,8 @@ export const EMethod = $root.EMethod = (() => {
                 $util.base64.decode(object.locallyFree, message.locallyFree = $util.newBuffer($util.base64.length(object.locallyFree)), 0);
             else if (object.locallyFree.length)
                 message.locallyFree = object.locallyFree;
-        if (object.connectiveUsed != null)
-            message.connectiveUsed = Boolean(object.connectiveUsed);
+        if (object.connective_used != null)
+            message.connective_used = Boolean(object.connective_used);
         return message;
     };
 
@@ -4241,7 +4240,7 @@ export const EMethod = $root.EMethod = (() => {
                 if (options.bytes !== Array)
                     object.locallyFree = $util.newBuffer(object.locallyFree);
             }
-            object.connectiveUsed = false;
+            object.connective_used = false;
         }
         if (message.methodName != null && message.hasOwnProperty("methodName"))
             object.methodName = message.methodName;
@@ -4254,8 +4253,8 @@ export const EMethod = $root.EMethod = (() => {
         }
         if (message.locallyFree != null && message.hasOwnProperty("locallyFree"))
             object.locallyFree = options.bytes === String ? $util.base64.encode(message.locallyFree, 0, message.locallyFree.length) : options.bytes === Array ? Array.prototype.slice.call(message.locallyFree) : message.locallyFree;
-        if (message.connectiveUsed != null && message.hasOwnProperty("connectiveUsed"))
-            object.connectiveUsed = message.connectiveUsed;
+        if (message.connective_used != null && message.hasOwnProperty("connective_used"))
+            object.connective_used = message.connective_used;
         return object;
     };
 
@@ -6455,20 +6454,20 @@ export const Connective = $root.Connective = (() => {
                     this[keys[i]] = properties[keys[i]];
     }
 
-    Connective.prototype.connAndBody = null;
-    Connective.prototype.connOrBody = null;
-    Connective.prototype.connNotBody = null;
-    Connective.prototype.varRefBody = null;
-    Connective.prototype.connBool = false;
-    Connective.prototype.connInt = false;
-    Connective.prototype.connString = false;
-    Connective.prototype.connUri = false;
-    Connective.prototype.connByteArray = false;
+    Connective.prototype.conn_and_body = null;
+    Connective.prototype.conn_or_body = null;
+    Connective.prototype.conn_not_body = null;
+    Connective.prototype.var_ref_body = null;
+    Connective.prototype.conn_bool = false;
+    Connective.prototype.conn_int = false;
+    Connective.prototype.conn_string = false;
+    Connective.prototype.conn_uri = false;
+    Connective.prototype.conn_byte_array = false;
 
     let $oneOfFields;
 
-    Object.defineProperty(Connective.prototype, "connectiveInstance", {
-        get: $util.oneOfGetter($oneOfFields = ["connAndBody", "connOrBody", "connNotBody", "varRefBody", "connBool", "connInt", "connString", "connUri", "connByteArray"]),
+    Object.defineProperty(Connective.prototype, "connective_instance", {
+        get: $util.oneOfGetter($oneOfFields = ["conn_and_body", "conn_or_body", "conn_not_body", "var_ref_body", "conn_bool", "conn_int", "conn_string", "conn_uri", "conn_byte_array"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -6479,24 +6478,24 @@ export const Connective = $root.Connective = (() => {
     Connective.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.connAndBody != null && message.hasOwnProperty("connAndBody"))
-            $root.ConnectiveBody.encode(message.connAndBody, writer.uint32(10).fork()).ldelim();
-        if (message.connOrBody != null && message.hasOwnProperty("connOrBody"))
-            $root.ConnectiveBody.encode(message.connOrBody, writer.uint32(18).fork()).ldelim();
-        if (message.connNotBody != null && message.hasOwnProperty("connNotBody"))
-            $root.Par.encode(message.connNotBody, writer.uint32(26).fork()).ldelim();
-        if (message.varRefBody != null && message.hasOwnProperty("varRefBody"))
-            $root.VarRef.encode(message.varRefBody, writer.uint32(34).fork()).ldelim();
-        if (message.connBool != null && message.hasOwnProperty("connBool"))
-            writer.uint32(40).bool(message.connBool);
-        if (message.connInt != null && message.hasOwnProperty("connInt"))
-            writer.uint32(48).bool(message.connInt);
-        if (message.connString != null && message.hasOwnProperty("connString"))
-            writer.uint32(56).bool(message.connString);
-        if (message.connUri != null && message.hasOwnProperty("connUri"))
-            writer.uint32(64).bool(message.connUri);
-        if (message.connByteArray != null && message.hasOwnProperty("connByteArray"))
-            writer.uint32(72).bool(message.connByteArray);
+        if (message.conn_and_body != null && message.hasOwnProperty("conn_and_body"))
+            $root.ConnectiveBody.encode(message.conn_and_body, writer.uint32(10).fork()).ldelim();
+        if (message.conn_or_body != null && message.hasOwnProperty("conn_or_body"))
+            $root.ConnectiveBody.encode(message.conn_or_body, writer.uint32(18).fork()).ldelim();
+        if (message.conn_not_body != null && message.hasOwnProperty("conn_not_body"))
+            $root.Par.encode(message.conn_not_body, writer.uint32(26).fork()).ldelim();
+        if (message.var_ref_body != null && message.hasOwnProperty("var_ref_body"))
+            $root.VarRef.encode(message.var_ref_body, writer.uint32(34).fork()).ldelim();
+        if (message.conn_bool != null && message.hasOwnProperty("conn_bool"))
+            writer.uint32(40).bool(message.conn_bool);
+        if (message.conn_int != null && message.hasOwnProperty("conn_int"))
+            writer.uint32(48).bool(message.conn_int);
+        if (message.conn_string != null && message.hasOwnProperty("conn_string"))
+            writer.uint32(56).bool(message.conn_string);
+        if (message.conn_uri != null && message.hasOwnProperty("conn_uri"))
+            writer.uint32(64).bool(message.conn_uri);
+        if (message.conn_byte_array != null && message.hasOwnProperty("conn_byte_array"))
+            writer.uint32(72).bool(message.conn_byte_array);
         return writer;
     };
 
@@ -6512,31 +6511,31 @@ export const Connective = $root.Connective = (() => {
             let tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.connAndBody = $root.ConnectiveBody.decode(reader, reader.uint32());
+                message.conn_and_body = $root.ConnectiveBody.decode(reader, reader.uint32());
                 break;
             case 2:
-                message.connOrBody = $root.ConnectiveBody.decode(reader, reader.uint32());
+                message.conn_or_body = $root.ConnectiveBody.decode(reader, reader.uint32());
                 break;
             case 3:
-                message.connNotBody = $root.Par.decode(reader, reader.uint32());
+                message.conn_not_body = $root.Par.decode(reader, reader.uint32());
                 break;
             case 4:
-                message.varRefBody = $root.VarRef.decode(reader, reader.uint32());
+                message.var_ref_body = $root.VarRef.decode(reader, reader.uint32());
                 break;
             case 5:
-                message.connBool = reader.bool();
+                message.conn_bool = reader.bool();
                 break;
             case 6:
-                message.connInt = reader.bool();
+                message.conn_int = reader.bool();
                 break;
             case 7:
-                message.connString = reader.bool();
+                message.conn_string = reader.bool();
                 break;
             case 8:
-                message.connUri = reader.bool();
+                message.conn_uri = reader.bool();
                 break;
             case 9:
-                message.connByteArray = reader.bool();
+                message.conn_byte_array = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -6556,78 +6555,78 @@ export const Connective = $root.Connective = (() => {
         if (typeof message !== "object" || message === null)
             return "object expected";
         let properties = {};
-        if (message.connAndBody != null && message.hasOwnProperty("connAndBody")) {
-            properties.connectiveInstance = 1;
+        if (message.conn_and_body != null && message.hasOwnProperty("conn_and_body")) {
+            properties.connective_instance = 1;
             {
-                let error = $root.ConnectiveBody.verify(message.connAndBody);
+                let error = $root.ConnectiveBody.verify(message.conn_and_body);
                 if (error)
-                    return "connAndBody." + error;
+                    return "conn_and_body." + error;
             }
         }
-        if (message.connOrBody != null && message.hasOwnProperty("connOrBody")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
+        if (message.conn_or_body != null && message.hasOwnProperty("conn_or_body")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
             {
-                let error = $root.ConnectiveBody.verify(message.connOrBody);
+                let error = $root.ConnectiveBody.verify(message.conn_or_body);
                 if (error)
-                    return "connOrBody." + error;
+                    return "conn_or_body." + error;
             }
         }
-        if (message.connNotBody != null && message.hasOwnProperty("connNotBody")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
+        if (message.conn_not_body != null && message.hasOwnProperty("conn_not_body")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
             {
-                let error = $root.Par.verify(message.connNotBody);
+                let error = $root.Par.verify(message.conn_not_body);
                 if (error)
-                    return "connNotBody." + error;
+                    return "conn_not_body." + error;
             }
         }
-        if (message.varRefBody != null && message.hasOwnProperty("varRefBody")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
+        if (message.var_ref_body != null && message.hasOwnProperty("var_ref_body")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
             {
-                let error = $root.VarRef.verify(message.varRefBody);
+                let error = $root.VarRef.verify(message.var_ref_body);
                 if (error)
-                    return "varRefBody." + error;
+                    return "var_ref_body." + error;
             }
         }
-        if (message.connBool != null && message.hasOwnProperty("connBool")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
-            if (typeof message.connBool !== "boolean")
-                return "connBool: boolean expected";
+        if (message.conn_bool != null && message.hasOwnProperty("conn_bool")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
+            if (typeof message.conn_bool !== "boolean")
+                return "conn_bool: boolean expected";
         }
-        if (message.connInt != null && message.hasOwnProperty("connInt")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
-            if (typeof message.connInt !== "boolean")
-                return "connInt: boolean expected";
+        if (message.conn_int != null && message.hasOwnProperty("conn_int")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
+            if (typeof message.conn_int !== "boolean")
+                return "conn_int: boolean expected";
         }
-        if (message.connString != null && message.hasOwnProperty("connString")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
-            if (typeof message.connString !== "boolean")
-                return "connString: boolean expected";
+        if (message.conn_string != null && message.hasOwnProperty("conn_string")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
+            if (typeof message.conn_string !== "boolean")
+                return "conn_string: boolean expected";
         }
-        if (message.connUri != null && message.hasOwnProperty("connUri")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
-            if (typeof message.connUri !== "boolean")
-                return "connUri: boolean expected";
+        if (message.conn_uri != null && message.hasOwnProperty("conn_uri")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
+            if (typeof message.conn_uri !== "boolean")
+                return "conn_uri: boolean expected";
         }
-        if (message.connByteArray != null && message.hasOwnProperty("connByteArray")) {
-            if (properties.connectiveInstance === 1)
-                return "connectiveInstance: multiple values";
-            properties.connectiveInstance = 1;
-            if (typeof message.connByteArray !== "boolean")
-                return "connByteArray: boolean expected";
+        if (message.conn_byte_array != null && message.hasOwnProperty("conn_byte_array")) {
+            if (properties.connective_instance === 1)
+                return "connective_instance: multiple values";
+            properties.connective_instance = 1;
+            if (typeof message.conn_byte_array !== "boolean")
+                return "conn_byte_array: boolean expected";
         }
         return null;
     };
@@ -6636,36 +6635,36 @@ export const Connective = $root.Connective = (() => {
         if (object instanceof $root.Connective)
             return object;
         let message = new $root.Connective();
-        if (object.connAndBody != null) {
-            if (typeof object.connAndBody !== "object")
-                throw TypeError(".Connective.connAndBody: object expected");
-            message.connAndBody = $root.ConnectiveBody.fromObject(object.connAndBody);
+        if (object.conn_and_body != null) {
+            if (typeof object.conn_and_body !== "object")
+                throw TypeError(".Connective.conn_and_body: object expected");
+            message.conn_and_body = $root.ConnectiveBody.fromObject(object.conn_and_body);
         }
-        if (object.connOrBody != null) {
-            if (typeof object.connOrBody !== "object")
-                throw TypeError(".Connective.connOrBody: object expected");
-            message.connOrBody = $root.ConnectiveBody.fromObject(object.connOrBody);
+        if (object.conn_or_body != null) {
+            if (typeof object.conn_or_body !== "object")
+                throw TypeError(".Connective.conn_or_body: object expected");
+            message.conn_or_body = $root.ConnectiveBody.fromObject(object.conn_or_body);
         }
-        if (object.connNotBody != null) {
-            if (typeof object.connNotBody !== "object")
-                throw TypeError(".Connective.connNotBody: object expected");
-            message.connNotBody = $root.Par.fromObject(object.connNotBody);
+        if (object.conn_not_body != null) {
+            if (typeof object.conn_not_body !== "object")
+                throw TypeError(".Connective.conn_not_body: object expected");
+            message.conn_not_body = $root.Par.fromObject(object.conn_not_body);
         }
-        if (object.varRefBody != null) {
-            if (typeof object.varRefBody !== "object")
-                throw TypeError(".Connective.varRefBody: object expected");
-            message.varRefBody = $root.VarRef.fromObject(object.varRefBody);
+        if (object.var_ref_body != null) {
+            if (typeof object.var_ref_body !== "object")
+                throw TypeError(".Connective.var_ref_body: object expected");
+            message.var_ref_body = $root.VarRef.fromObject(object.var_ref_body);
         }
-        if (object.connBool != null)
-            message.connBool = Boolean(object.connBool);
-        if (object.connInt != null)
-            message.connInt = Boolean(object.connInt);
-        if (object.connString != null)
-            message.connString = Boolean(object.connString);
-        if (object.connUri != null)
-            message.connUri = Boolean(object.connUri);
-        if (object.connByteArray != null)
-            message.connByteArray = Boolean(object.connByteArray);
+        if (object.conn_bool != null)
+            message.conn_bool = Boolean(object.conn_bool);
+        if (object.conn_int != null)
+            message.conn_int = Boolean(object.conn_int);
+        if (object.conn_string != null)
+            message.conn_string = Boolean(object.conn_string);
+        if (object.conn_uri != null)
+            message.conn_uri = Boolean(object.conn_uri);
+        if (object.conn_byte_array != null)
+            message.conn_byte_array = Boolean(object.conn_byte_array);
         return message;
     };
 
@@ -6673,50 +6672,50 @@ export const Connective = $root.Connective = (() => {
         if (!options)
             options = {};
         let object = {};
-        if (message.connAndBody != null && message.hasOwnProperty("connAndBody")) {
-            object.connAndBody = $root.ConnectiveBody.toObject(message.connAndBody, options);
+        if (message.conn_and_body != null && message.hasOwnProperty("conn_and_body")) {
+            object.conn_and_body = $root.ConnectiveBody.toObject(message.conn_and_body, options);
             if (options.oneofs)
-                object.connectiveInstance = "connAndBody";
+                object.connective_instance = "conn_and_body";
         }
-        if (message.connOrBody != null && message.hasOwnProperty("connOrBody")) {
-            object.connOrBody = $root.ConnectiveBody.toObject(message.connOrBody, options);
+        if (message.conn_or_body != null && message.hasOwnProperty("conn_or_body")) {
+            object.conn_or_body = $root.ConnectiveBody.toObject(message.conn_or_body, options);
             if (options.oneofs)
-                object.connectiveInstance = "connOrBody";
+                object.connective_instance = "conn_or_body";
         }
-        if (message.connNotBody != null && message.hasOwnProperty("connNotBody")) {
-            object.connNotBody = $root.Par.toObject(message.connNotBody, options);
+        if (message.conn_not_body != null && message.hasOwnProperty("conn_not_body")) {
+            object.conn_not_body = $root.Par.toObject(message.conn_not_body, options);
             if (options.oneofs)
-                object.connectiveInstance = "connNotBody";
+                object.connective_instance = "conn_not_body";
         }
-        if (message.varRefBody != null && message.hasOwnProperty("varRefBody")) {
-            object.varRefBody = $root.VarRef.toObject(message.varRefBody, options);
+        if (message.var_ref_body != null && message.hasOwnProperty("var_ref_body")) {
+            object.var_ref_body = $root.VarRef.toObject(message.var_ref_body, options);
             if (options.oneofs)
-                object.connectiveInstance = "varRefBody";
+                object.connective_instance = "var_ref_body";
         }
-        if (message.connBool != null && message.hasOwnProperty("connBool")) {
-            object.connBool = message.connBool;
+        if (message.conn_bool != null && message.hasOwnProperty("conn_bool")) {
+            object.conn_bool = message.conn_bool;
             if (options.oneofs)
-                object.connectiveInstance = "connBool";
+                object.connective_instance = "conn_bool";
         }
-        if (message.connInt != null && message.hasOwnProperty("connInt")) {
-            object.connInt = message.connInt;
+        if (message.conn_int != null && message.hasOwnProperty("conn_int")) {
+            object.conn_int = message.conn_int;
             if (options.oneofs)
-                object.connectiveInstance = "connInt";
+                object.connective_instance = "conn_int";
         }
-        if (message.connString != null && message.hasOwnProperty("connString")) {
-            object.connString = message.connString;
+        if (message.conn_string != null && message.hasOwnProperty("conn_string")) {
+            object.conn_string = message.conn_string;
             if (options.oneofs)
-                object.connectiveInstance = "connString";
+                object.connective_instance = "conn_string";
         }
-        if (message.connUri != null && message.hasOwnProperty("connUri")) {
-            object.connUri = message.connUri;
+        if (message.conn_uri != null && message.hasOwnProperty("conn_uri")) {
+            object.conn_uri = message.conn_uri;
             if (options.oneofs)
-                object.connectiveInstance = "connUri";
+                object.connective_instance = "conn_uri";
         }
-        if (message.connByteArray != null && message.hasOwnProperty("connByteArray")) {
-            object.connByteArray = message.connByteArray;
+        if (message.conn_byte_array != null && message.hasOwnProperty("conn_byte_array")) {
+            object.conn_byte_array = message.conn_byte_array;
             if (options.oneofs)
-                object.connectiveInstance = "connByteArray";
+                object.connective_instance = "conn_byte_array";
         }
         return object;
     };
