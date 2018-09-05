@@ -14,7 +14,10 @@ const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
 function startRelay(runtime /*: typeof chrome.runtime*/, pgPort /*: BusPort*/) {
   console.log('startRelay...');
 
-  runtime.onMessage.addListener((maybeMsg, _sender, _sendResponse) => {
+  // ISSUE: Callback declaration for runtime.onMessage in flow-interfaces-chrome
+  // isn't right.
+  const { onMessage } = (runtime /*:any*/);
+  onMessage.addListener((maybeMsg, _sender, _sendResponse) => {
     const msg = maybeMsg || {};
     if (msg.target !== `${RCHAIN_SIGNING}/page`) { return; }
     console.log('@@pageRelay got runtime message for page', maybeMsg.method, maybeMsg);

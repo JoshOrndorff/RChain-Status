@@ -1,17 +1,34 @@
-// @flow
+/** sigTool -- signing key generation, storage, and usage
+@flow
+ */
 
-/* global unescape, encodeURIComponent */
+/* global unescape, encodeURIComponent, HTMLInputElement, HTMLTextAreaElement */
 
 import def from './def.js';
 
 /*::
-export type UserAgent = {
-  chrome: typeof chrome,
-  browser: {
-    storage: {
-      local: StorageArea
-    }
-  }
+
+import type Nacl from './lib/nacl-fast.min.js';
+
+// SigningKey is the format we use to save the key pair
+// with the secret key encrypted.
+export type SigningKey = {
+  label: string,
+  secretKey: {
+    // ISSUE: opaque type for hex?
+    nonce: string,
+    cipherText: string,
+  },
+  pubKey: string
+}
+
+interface SigTool {
+  // Generate and save key.
+  generate({ label: string, password: string }): Promise<SigningKey>,
+  // Get stored key.
+  getKey(): Promise<SigningKey>,
+  // Decrypt private key and use it to sign message.
+  signMessage(message: Uint8Array, signingKey: SigningKey, password: string): string
 }
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage/StorageArea
@@ -20,14 +37,21 @@ interface StorageArea {
   set(items: Object): Promise<void>
 }
 
-import type Nacl from './lib/nacl-fast.min.js';
-*/
+// Toward a portable chrome/firefox API (WIP).
+export type UserAgent = {
+  chrome: typeof chrome,
+  browser?: {
+    storage: {
+      local: StorageArea
+    }
+  }
+}
 
+*/
 
 export function options(document /*: Document*/, ua /*: UserAgent*/, nacl /*: Nacl*/) {
   const die = (id) => { throw new Error(id); };
   const byId = id => document.getElementById(id) || die(id);
-  const fieldById = id => ((byId(id) /*:any*/)/*: HTMLInputElement*/);
 
   function lose(doing, exc) {
     byId('status').textContent = `failed ${doing}: ${exc.message}`;
@@ -44,8 +68,8 @@ export function options(document /*: Document*/, ua /*: UserAgent*/, nacl /*: Na
       byId('status').textContent = '';
 
       tool.generate({
-        label: fieldById('label').value,
-        password: fieldById('password').value,
+        label: input(byId('label')).value,
+        password: input(byId('password')).value,
       })
         .then(showPubKey)
         .catch(oops => lose('generate key', oops));
@@ -56,15 +80,27 @@ export function options(document /*: Document*/, ua /*: UserAgent*/, nacl /*: Na
   function showPubKey({ label, pubKey } /*: SigningKey*/) {
     /* Assigning to params is the norm for DOM stuff. */
     /* eslint-disable no-param-reassign */
-    fieldById('label').value = label;
-    fieldById('pubKey').value = pubKey;
+    input(byId('label')).value = label;
+    input(byId('pubKey')).value = pubKey;
   }
 }
 
 
 /**
- * @param ext ref [compat][1]
- * @param ext.chrome
+ * Runtime check that this element is an input.
+ */
+export function input(elt /*: HTMLElement*/) /*: HTMLInputElement | HTMLTextAreaElement */ {
+  if (!(elt instanceof HTMLInputElement || elt instanceof HTMLTextAreaElement)) {
+    throw new TypeError(`not an input: ${elt.toString()}`);
+  }
+  return elt;
+}
+
+
+/**
+ * Normalize local storage API
+ *
+ * Produce promise-style API despite [chrome compatibility issues][1].
  *
  * [1]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Chrome_incompatibilities
  */
@@ -75,26 +111,6 @@ export function localStorage({ browser, chrome } /*: UserAgent*/) /*: StorageAre
   });
 }
 
-
-/*::
-//ISSUE: opaque type for hex?
-
-export type SigningKey = {
-  label: string,
-  secretKey: {
-    nonce: string,
-    cipherText: string,
-  },
-  pubKey: string
-}
-
-interface SigTool {
-  getKey(): Promise<SigningKey>,
-  generate({ label: string, password: string }): Promise<SigningKey>,
-  signMessage(message: Uint8Array, signingKey: SigningKey, password: string): string
-}
-
- */
 
 export function sigTool(local /*: StorageArea */, nacl /*: Nacl*/) /*: SigTool */ {
   function getKey() /*: Promise<SigningKey> */{

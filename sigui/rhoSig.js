@@ -1,8 +1,10 @@
-// @flow
+/** rhoSig -- RHOCore signing UI
+@flow
+*/
 
 import { fromJSData, toByteArray, toRholang } from './RHOCore.js';
 
-import { sigTool, localStorage } from './sigTool.js';
+import { sigTool, localStorage, input } from './sigTool.js';
 
 const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
 
@@ -15,10 +17,8 @@ import type Nacl from './lib/nacl-fast.min.js';
 
 export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl /*: Nacl*/) {
   const tool = sigTool(localStorage(ua), nacl);
-  const die = (id) => { throw new Error(id); };
+  const die = (id) => { throw new TypeError(`coding bug: no such id ${id}`); };
   const byId = id => document.getElementById(id) || die(id);
-  // casting thru any. so THERE!
-  const fieldById = id => ((byId(id) /*:any*/)/*: HTMLInputElement*/);
 
   /**
    * Signature request from page
@@ -27,8 +27,8 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
   function requestSignature(_refs, payload) {
     const par = fromJSData(payload);
     console.log('rhoSig', { par });
-    fieldById('data').value = JSON.stringify(payload);
-    fieldById('rholang').value = toRholang(par);
+    input(byId('data')).value = JSON.stringify(payload);
+    input(byId('rholang')).value = toRholang(par);
     return new Promise((resolve, reject) => {
       requestPending = { resolve, reject };
     });
@@ -62,8 +62,8 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
   function showPubKey({ label, pubKey } /*: SigningKey*/) {
     /* Assigning to params is the norm for DOM stuff. */
     /* eslint-disable no-param-reassign */
-    fieldById('label').value = label;
-    fieldById('pubKey').value = pubKey;
+    input(byId('label')).value = label;
+    input(byId('pubKey')).value = pubKey;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -76,15 +76,15 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
       let par;
 
       try {
-        par = fromJSData(JSON.parse(fieldById('data').value));
+        par = fromJSData(JSON.parse(input(byId('data')).value));
       } catch (oops) {
         lose('parsing data', oops);
         return;
       }
       byId('rholang').textContent = toRholang(par);
-      signProcess(par, fieldById('password').value)
+      signProcess(par, input(byId('password')).value)
         .then((sig) => {
-          fieldById('sig').value = sig;
+          input(byId('sig')).value = sig;
         })
         .catch(oops => lose('get key', oops));
     });
@@ -105,7 +105,8 @@ export default function popup(document /*: Document*/, ua /*: UserAgent */, nacl
     });
 
     // ISSUE: flow-interfaces-chrome doesn't realize sendResponse takes an arg
-    ua.chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    const { onMessage } = (ua.chrome.runtime /*:any*/);
+    onMessage.addListener((msg, _sender, sendResponse) => {
       console.log('@@rhoSig received', msg);
       if (msg.target !== selfRef) { return undefined; }
       if (msg.method !== 'requestSignature') { return undefined; } // ISSUE: reply with error?
