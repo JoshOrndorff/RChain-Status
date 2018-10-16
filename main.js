@@ -13,13 +13,9 @@ function main(argv, { grpc, express, clock, random }) {
   // Serve static assets like index.html and page.js from root directory
   app.use(express.static(__dirname));
 
-  const deploy = code => myNode
-    .doDeploy({ term: code, timestamp: clock().valueOf() })
-    .then(_ => myNode.createBlock());
-
-  app.post('/users/:name', registerHandler(deploy));
-  app.get('/users/:name/status', checkHandler(deploy, myNode, random));
-  app.post('/users/:name/status', setHandler(deploy));
+  app.post('/users/:name', registerHandler(myNode, clock));
+  app.post('/users/:name/status', setHandler(myNode, clock));
+  app.get('/users/:name/status', checkHandler(myNode, clock, random));
 
   app.listen(uiPort, () => {
     console.log('RChain status dapp started.');
@@ -36,22 +32,32 @@ function strLit(txt) {
   return JSON.stringify(txt);
 }
 
-
-function bail(res, oops) {
+/**
+ * Helper for when communication with the node goes wrong. Logs the problem
+ * the console and sends an HTTP 500 back to the requesting browser with the
+ * appropriate message
+ * @param response ...
+ * @param oops The failure ...
+ *
+ */
+function bail(response, oops) {
   console.log(oops);
   res.status(500).send({ message: oops.message });
 }
 
 
-function registerHandler(deploy) {
+function registerHandler(myNode, clock) {
   return (req, res) => {
-
-    const nameExpr = strLit(req.params.name);
-
-    const code = req.query.code ? req.query.code : `@"registerInsecure"!(${nameExpr}, Nil)`;
+    const deployData = {
+      term: req.query.code,
+      timestamp: clock.valueOf(),
+      phloPrice: { value: 1}, //TODO These are placeholder values.
+      phloLimit: { value: 1000000},
+      from: '0x01',
+    }
 
     // TODO: use a non-trivial return channel and wait for results there.
-    deploy(code)
+    myNode.doDeploy(deployData, true)
       .then((result) => {
         res.send(result);
       }).catch(oops => bail(res, oops));
@@ -59,17 +65,53 @@ function registerHandler(deploy) {
 }
 
 
-function checkHandler(deploy, myNode, random) {
+function setHandler(myNode, clock) {
+  return (req, res) => {
+    const info = {
+      name: strLit(req.params.name),
+      status: strLit(req.query.status),
+      signature: strLit(req.query.signature)
+    };
+
+    console.log('set:', info);
+
+    const rholangCode = `@[${info.name}, "newStatus"]!(${info.status}, ${info.signature}, "notUsingAck")`
+
+    const deployData = {
+      term: rholangCode,
+      timestamp: clock.valueOf(),
+      phloPrice: { value: 1}, //TODO These are placeholder values.
+      phloLimit: { value: 1000000},
+      from: '0x01',
+    }
+
+    myNode.doDeploy(deployData, true)
+      .then(() => {
+        res.send('Status updated successfully');
+      }).catch(oops => bail(res, oops));
+  };
+}
+
+
+function checkHandler(myNode, clock, random) {
   return (req, res) => {
     const nameExpr = strLit(req.params.name);
 
     // Generate a public ack channel
-    // TODO this should be unforgeable. Can I make one from JS?
+    // TODO this should be unforgeable.
     const ack = random().toString(36).substring(7);
+    const rholangCode = `@[${nameExpr}, "check"]!("${ack}")`;
 
+    const deployData = {
+      term: rholangCode,
+      timestamp: clock.valueOf(),
+      phloPrice: { value: 1}, //TODO These are placeholder values.
+      phloLimit: { value: 1000000},
+      from: '0x01',
+    }
     // Check the status, sending it to the ack channel
-    deploy(`@[${nameExpr}, "check"]!("${ack}")`)
-      .then(_ => myNode.listenForDataAtName(ack)) // Get the data from the node
+    myNode.doDeploy(deployData, true)
+      .then(_ => myNode.listenForDataAtPublicName(ack))
       .then((blockResults) => {
         if (blockResults.length === 0) {
           res.status(404).send({ message: 'No data found' });
@@ -82,27 +124,6 @@ function checkHandler(deploy, myNode, random) {
   };
 }
 
-
-function setHandler(deploy) {
-  return (req, res) => {
-    const info = {
-      name: strLit(req.params.name),
-      status: strLit(req.query.status),
-      signature: strLit(req.query.signature)
-    };
-
-    console.log('set:', info);
-
-    const rholangCode = (info.signature ?
-    `@[${info.name}, "newStatus"]!(${info.status}, ${info.signature}, "notUsingAck")` :
-    `@[${info.name}, "newStatus"]!(${info.status}, "notUsingAck")`);
-
-    deploy(rholangCode)
-      .then(() => {
-        res.send('Status updated successfully');
-      }).catch(oops => bail(res, oops));
-  };
-}
 
 
 if (require.main === module) {

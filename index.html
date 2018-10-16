@@ -24,9 +24,6 @@
                 <div class="input-group">
                   <label class="input-group-addon addon-lg" for="name">Name:</label>
                   <input id="name" type="text" class="form-input input-lg"/>
-                  <label class="input-group-addon">
-                    <input type="checkbox" id="sign-register" />Signed?
-                  </label>
                   <button id="register" class="btn btn-primary input-group-btn btn-lg" >Register</button>
                 </div>
                 <div class="divider-vert"></div>
@@ -48,9 +45,6 @@
             <div class="input-group">
               <label class="input-group-addon addon-lg" for="name">Status:</label>
               <input id="new-status" type="text" class="form-input input-lg"/>
-              <label class="input-group-addon">
-                <input type="checkbox" id="sign-status" />Signed?
-              </label>
               <label class="input-group-addon">
                 nonce: <input type="text" id="nonce" />
               </label>
@@ -116,12 +110,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const ui = def({
     nameBox: byId("name"),
-    registerSign: byId("sign-register"),
     registerButton: byId("register"),
     newStatusBox: byId("new-status"),
     nonceBox: byId("nonce"),
     setStatusButton: byId("set-status"),
-    statusSign: byId("sign-status"),
     friendBox: byId("friend-name"),
     checkButton: byId("check-status"),
     friendStatusP: byId("friend-status"),

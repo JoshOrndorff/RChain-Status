@@ -82,30 +82,13 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
   });
 
   ui.registerButton.addEventListener('click', () => {
-    if (ui.registerSign.checked) {
-      toSign = getName();
-      operation = "register";
-    }
-    else {
-      // Insecure register
-      fetch(urlEncode`/users/${getName()}`, { method: 'POST' });
-      // TODO make the button busy
-      // TODO report status
-    }
+    toSign = getName();
+    operation = "register";
   });
 
   ui.setStatusButton.addEventListener('click', () => {
-    if (ui.statusSign.checked) {
-      toSign = [ui.newStatusBox.value, parseInt(ui.nonceBox.value, 10)];
-      operation = "post";
-    }
-    else {
-      // Insecure post
-      fetch(
-        urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}`,
-        { method: 'POST' },
-      );
-    }
+    toSign = [ui.newStatusBox.value, parseInt(ui.nonceBox.value, 10)];
+    operation = "post";
   });
 
 
