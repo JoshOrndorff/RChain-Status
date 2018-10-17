@@ -1,36 +1,52 @@
 const { RNode, RHOCore } = require('rchain-api');
+const docopt = require('docopt').docopt;
+const { rho } = require('./rhoTemplate')
 
+const usage = `
+
+const host = argv[2] ? argv[2] : 'localhost';
+const port = argv[3] ? parseInt(argv[3], 10) : 40401;
+const uiPort = argv[4] ? parseInt(process.argv[4], 10) : 8080;
+
+
+Start a fresh node, deploy the contract, note the uri and then start this middleware.
+
+Usage:
+  main.js [options]
+
+Options:
+ --host INT             The hostname or IPv4 address of the node
+                        [default: localhost]
+ --port INT             The tcp port of the nodes gRPC service
+                        [default: 40401]
+ --ui-port INT          The tcp port for the dApp UI to connect on
+                        [default: 8080]
+ -c --register URI      The dApp's register contract's URI in the registry
+ -h --help              show usage
+
+`;
 
 function main(argv, { grpc, express, clock, random }) {
-  // Setup server parameters
-  const host = argv[2] ? argv[2] : 'localhost';
-  const port = argv[3] ? parseInt(argv[3], 10) : 40401;
-  const uiPort = argv[4] ? parseInt(process.argv[4], 10) : 8080;
+  const cli = docopt(usage, { argv: argv.slice(2) });
+  console.log('DEBUG: cli:', cli);
 
-  const myNode = RNode(grpc, { host, port });
+  const myNode = RNode(grpc, { host: cli["--host"], port: cli["--port"] });
   const app = express();
 
   // Serve static assets like index.html and page.js from root directory
   app.use(express.static(__dirname));
 
-  app.post('/users/:name', registerHandler(myNode, clock));
+  app.post('/users/:name', registerHandler(myNode, clock, cli["--register"]));
   app.post('/users/:name/status', setHandler(myNode, clock));
   app.get('/users/:name/status', checkHandler(myNode, clock, random));
 
-  app.listen(uiPort, () => {
+  app.listen(cli["--ui-port"], () => {
     console.log('RChain status dapp started.');
-    console.log(`Using ${host}:${port} to contact RNode.`);
-    console.log(`User interface on port ${uiPort}`);
+    console.log(`Using ${cli["--host"]}:${cli["--port"]} to contact RNode.`);
+    console.log(`User interface on port ${cli["--ui-port"]}`);
   });
 }
 
-
-/**
- * Turn a string into a Rholang string literal, quoting as necessary.
- */
-function strLit(txt) {
-  return JSON.stringify(txt);
-}
 
 /**
  * Helper for when communication with the node goes wrong. Logs the problem
@@ -46,11 +62,22 @@ function bail(response, oops) {
 }
 
 
-function registerHandler(myNode, clock) {
+function registerHandler(myNode, clock, uri) {
   return (req, res) => {
+
+    const rholangCode = rho`
+    new lookup(\`rho:registry:lookup\`), registerCh in {
+      lookup!(\`URI\`, *registerCh)|
+
+      for (registerForStatus <- registerCh){
+        registerForStatus!(${req.params.name}, ${req.query.sig}, ${req.query.pubKey}, "bogusReturn")
+      }
+    }
+    `.replace("URI", uri) //TODO Do this better
+
     const deployData = {
-      term: req.query.code,
-      timestamp: clock.valueOf(),
+      term: rholangCode,
+      timestamp: clock().valueOf(),
       phloPrice: { value: 1}, //TODO These are placeholder values.
       phloLimit: { value: 1000000},
       from: '0x01',
@@ -67,15 +94,8 @@ function registerHandler(myNode, clock) {
 
 function setHandler(myNode, clock) {
   return (req, res) => {
-    const info = {
-      name: strLit(req.params.name),
-      status: strLit(req.query.status),
-      signature: strLit(req.query.signature)
-    };
 
-    console.log('set:', info);
-
-    const rholangCode = `@[${info.name}, "newStatus"]!(${info.status}, ${info.signature}, "notUsingAck")`
+    const rholangCode = rho`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`
 
     const deployData = {
       term: rholangCode,
@@ -95,12 +115,11 @@ function setHandler(myNode, clock) {
 
 function checkHandler(myNode, clock, random) {
   return (req, res) => {
-    const nameExpr = strLit(req.params.name);
 
     // Generate a public ack channel
     // TODO this should be unforgeable.
     const ack = random().toString(36).substring(7);
-    const rholangCode = `@[${nameExpr}, "check"]!("${ack}")`;
+    const rholangCode = rho`@[${req.params.name}, "check"]!(${ack})`;
 
     const deployData = {
       term: rholangCode,

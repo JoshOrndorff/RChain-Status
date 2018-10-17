@@ -1,4 +1,14 @@
-new debug(`rho:io:stdout`), sigVerify in {
+new sigVerify, registerForStatus, uriCh,
+    debug(`rho:io:stdout`),
+    insertArbitrary(`rho:registry:insertArbitrary`) in {
+
+  // Register the main contract into the registry
+  insertArbitrary!(bundle+{*registerForStatus}, *uriCh)
+  |
+  for (uri <- uriCh){
+    debug!(["Contract registered. URI is ", *uri])
+  }
+  |
 
   /**
    * Wrapper around ed25519Verify. Rather than returning bool on a single
@@ -29,7 +39,7 @@ new debug(`rho:io:stdout`), sigVerify in {
    * @param signature ed25519 signature over controlPanel
    * @return 0 for success, or a human-readable error message
    */
-  contract @"register"(controlPanel, @signature, @pubKey, return) = {
+  contract registerForStatus(controlPanel, @signature, @pubKey, return) = {
 
     new goodSig in {
       sigVerify!(*controlPanel, signature, pubKey, *goodSig, *return)|

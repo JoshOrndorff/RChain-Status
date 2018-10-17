@@ -39,10 +39,8 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
         //const withSig = {"register": [getName(), pubKey, signature, "bogusReturnChan"]}//[].concat(toSign, [{ signature, pubKey }]);
 
         if (operation === "register"){
-          // TODO make this better and move it to main.js
-          const rholangCode = `@"register"!(${JSON.stringify(getName())}, "${signature}", "${pubKey}", "bogusReturn")`
-          ui.signature.value = rholangCode;
-          fetch(urlEncode`/users/${getName()}?code=${rholangCode}`, { method: 'POST' })
+          ui.signature.value = signature
+          fetch(urlEncode`/users/${getName()}?sig=${signature}&pubKey=${pubKey}`, { method: 'POST' })
         }
         else if (operation == "post"){
           fetch(urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}&signature=${signature}`, { method: 'POST' })
