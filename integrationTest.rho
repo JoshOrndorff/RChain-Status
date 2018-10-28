@@ -1,0 +1,73 @@
+new stdout(`rho:io:stdout`),
+    stdoutAck(`rho:io:stdoutAck`),
+    lookup(`rho:registry:lookup`) in {
+
+  // First look up the contract in the registry
+  lookup!()//TODO
+
+  // Integration test:
+  // Story of Alice keeping her friends updated on her goings-on,
+  // and Bob, her friend, who follows closely.
+
+  new aliceCP, bob, ack in {
+    // She registers and awaits control panel in reply
+    stdout!("Alice Registering") |
+    @"register"!(*aliceCP, *ack) |
+    for (_ <- ack){
+
+      // She makes a status checker for her friend Bob
+      stdout!("Control Panel received, Alice making checker") |
+      @[*aliceCP, "makeRevCheck"]!(*ack) |
+      for (bobCheck, bobKill <- ack){
+
+        // And sends it over so he can follow her.
+        stdout!("Alice sending checker to Bob") |
+        bob!(*bobCheck) |
+        for (bobsOwnCheck <- bob){
+
+          // When Bob sees that he can check Alice's status, he does.
+          stdout!("Bob receiving checker from Alice") |
+          bobsOwnCheck!(*ack) |
+          for(@status <- ack) {
+            stdout!("Bob received status: " ++ status) |
+
+            // Alice updates her status
+            stdout!("Alice updating status") |
+            @[*aliceCP, "newStatus"]!("Having fun traveling in Europe!", *ack) |
+
+            for (_ <- ack) {
+
+              // Bob checks again
+              stdout!("Bob about to check again") |
+              bobsOwnCheck!(*ack) |
+              for(@status <- ack) {
+                stdout!("Bob received status: " ++ status) |
+
+                // Later she gets angry and revokes his reading capability
+                stdoutAck!("Alice revoking Bob's read cap", *ack) |
+                for(_ <- ack) {
+                  bobKill!(*ack) |
+
+                  for (_ <- ack) {
+
+                    // She continues to post
+                    @[*aliceCP, "newStatus"]!("Bob stinks. He should never see this on the screen", *ack) |
+
+                    for(_ <- ack) {
+                      stdout!("Alice successfully posted status") |
+                      // But Bob can't read anymore
+                      bobsOwnCheck!(*ack) |
+                      for(_ <- ack) {
+                        stdout!("If we get here something is wrong.")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

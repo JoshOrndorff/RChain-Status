@@ -1,91 +1,160 @@
-"use strict"
+const { RNode, RHOCore } = require('rchain-api');
+const docopt = require('docopt').docopt;
+const { rho } = require('./rhoTemplate')
 
-const {RNode, RHOCore, logged} = require("rchain-api") //npm install --save github:JoshOrndorff/RChain-API
-const express = require('express')
-const grpc = require('grpc')
+const usage = `
 
-// Setup server parameters
-var host   = process.argv[2] ? process.argv[2] : "localhost"
-var port   = process.argv[3] ? process.argv[3] : 40401
-var uiPort = process.argv[4] ? process.argv[4] : 8080
-
-var myNode = RNode(grpc, {host, port})
-var app = express()
-
-// Serve static assets like index.html and page.js from root directory
-app.use(express.static(__dirname))
-
-app.listen(uiPort, () => {
-  console.log("RChain status dapp started.")
-  console.log(`Connected to RNode at ${host}:${port}.`)
-  console.log(`Userinterface on port ${uiPort}`)
-})
+const host = argv[2] ? argv[2] : 'localhost';
+const port = argv[3] ? parseInt(argv[3], 10) : 40401;
+const uiPort = argv[4] ? parseInt(process.argv[4], 10) : 8080;
 
 
-/////////////////////////////////////////////////
+Start a fresh node, deploy the contract, note the uri and then start this middleware.
+
+Usage:
+  main.js [options]
+
+Options:
+ --host INT             The hostname or IPv4 address of the node
+                        [default: localhost]
+ --port INT             The tcp port of the nodes gRPC service
+                        [default: 40401]
+ --ui-port INT          The tcp port for the dApp UI to connect on
+                        [default: 8080]
+ -c --register URI      The dApp's register contract's URI in the registry
+ -h --help              show usage
+
+`;
+
+function main(argv, { grpc, express, clock, random }) {
+  const cli = docopt(usage, { argv: argv.slice(2) });
+  console.log('DEBUG: cli:', cli);
+
+  const myNode = RNode(grpc, { host: cli["--host"], port: cli["--port"] });
+  const app = express();
+
+  // Serve static assets like index.html and page.js from root directory
+  app.use(express.static(__dirname));
+
+  app.post('/users/:name', registerHandler(myNode, clock, cli["--register"]));
+  app.post('/users/:name/status', setHandler(myNode, clock));
+  app.get('/users/:name/status', checkHandler(myNode, clock, random));
+
+  app.listen(cli["--ui-port"], () => {
+    console.log('RChain status dapp started.');
+    console.log(`Using ${cli["--host"]}:${cli["--port"]} to contact RNode.`);
+    console.log(`User interface on port ${cli["--ui-port"]}`);
+  });
+}
 
 
-app.post('/register', (req, res) => {
-  // TODO: What am I supposed to do with the ack channel when calling from off-chain?
-  var code = `@"register"!("${req.query.name}", 0)`
-  var deployData = {term: code,
-                    timestamp: new Date().valueOf()
-                    // from: '0x1',
-                    // nonce: 0,
-                   }
-
-  myNode.doDeploy(deployData).then(result => {
-    return myNode.createBlock()
-  }).then(result => {
-    res.send(result)
-  }).catch(oops => { console.log(oops); })
-})
+/**
+ * Helper for when communication with the node goes wrong. Logs the problem
+ * the console and sends an HTTP 500 back to the requesting browser with the
+ * appropriate message
+ * @param response ...
+ * @param oops The failure ...
+ *
+ */
+function bail(response, oops) {
+  console.log(oops);
+  res.status(500).send({ message: oops.message });
+}
 
 
+function registerHandler(myNode, clock, uri) {
+  return (req, res) => {
 
-app.post('/check', (req, res) => {
-  // Generate a public ack channel
-  // TODO this should be unforgeable. Can I make one from JS?
-  var ack = Math.random().toString(36).substring(7)
+    const rholangCode = rho`
+    new lookup(\`rho:registry:lookup\`), registerCh in {
+      lookup!(\`URI\`, *registerCh)|
 
-  // This shouldn't actually require a transaction, for publicly visible data, right?
-  // Check the status, sending it to the ack channel
-  var code = `@["${req.query.name}", "check"]!("${ack}")`
-  var deployData = {term: code,
-                    timestamp: new Date().valueOf()
-                    // from: '0x1',
-                    // nonce: 0,
-                   }
-  myNode.doDeploy(deployData).then(_ => {
-    return myNode.createBlock()
-  }).then(_ => {
-    // Get the data from the node
-    return myNode.listenForDataAtName(ack)
-  }).then((blockResults) => {
-    if(blockResults.length === 0){
-      res.code = 404
-      res.send("No data found")
-      //TODO Do I need to return here?
+      for (registerForStatus <- registerCh){
+        registerForStatus!(${req.params.name}, ${req.query.sig}, ${req.query.pubKey}, "bogusReturn")
+      }
     }
-    var lastBlock = blockResults.slice(-1).pop()
-    var lastDatum = lastBlock.postBlockData.slice(-1).pop()
-    res.send(RHOCore.toRholang(lastDatum))
-  }).catch(oops => { console.log(oops); })
-})
+    `.replace("URI", uri) //TODO Do this better
+
+    const deployData = {
+      term: rholangCode,
+      timestamp: clock().valueOf(),
+      phloPrice: { value: 1}, //TODO These are placeholder values.
+      phloLimit: { value: 1000000},
+      from: '0x01',
+    }
+
+    // TODO: use a non-trivial return channel and wait for results there.
+    myNode.doDeploy(deployData, true)
+      .then((result) => {
+        res.send(result);
+      }).catch(oops => bail(res, oops));
+  };
+}
+
+
+function setHandler(myNode, clock) {
+  return (req, res) => {
+
+    const rholangCode = rho`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`
+
+    const deployData = {
+      term: rholangCode,
+      timestamp: clock.valueOf(),
+      phloPrice: { value: 1}, //TODO These are placeholder values.
+      phloLimit: { value: 1000000},
+      from: '0x01',
+    }
+
+    myNode.doDeploy(deployData, true)
+      .then(() => {
+        res.send('Status updated successfully');
+      }).catch(oops => bail(res, oops));
+  };
+}
+
+
+function checkHandler(myNode, clock, random) {
+  return (req, res) => {
+
+    // Generate a public ack channel
+    // TODO this should be unforgeable.
+    const ack = random().toString(36).substring(7);
+    const rholangCode = rho`@[${req.params.name}, "check"]!(${ack})`;
+
+    const deployData = {
+      term: rholangCode,
+      timestamp: clock.valueOf(),
+      phloPrice: { value: 1}, //TODO These are placeholder values.
+      phloLimit: { value: 1000000},
+      from: '0x01',
+    }
+    // Check the status, sending it to the ack channel
+    myNode.doDeploy(deployData, true)
+      .then(_ => myNode.listenForDataAtPublicName(ack))
+      .then((blockResults) => {
+        if (blockResults.length === 0) {
+          res.status(404).send({ message: 'No data found' });
+          return;
+        }
+        const lastBlock = blockResults.slice(-1).pop();
+        const lastDatum = lastBlock.postBlockData.slice(-1).pop();
+        res.status(200).send({ status: RHOCore.toRholang(lastDatum) });
+      }).catch(oops => bail(res, oops));
+  };
+}
 
 
 
-app.post("/set", (req, res) => {
-  var code = `@["${req.query.name}", "newStatus"]!("${req.query.status}", "ack")`
-  var deployData = {term: code,
-                    timestamp: new Date().valueOf()
-                    // from: '0x1',
-                    // nonce: 0,
-                   }
+if (require.main === module) {
+  /* eslint-disable global-require */
 
-  myNode.doDeploy(deployData).then(result => {
-    return myNode.createBlock()
-  }).then(result => {
-    res.send("Status updated successfully")
-  }).catch(oops => { console.log(oops); })
-})
+  // Import primitive effects only when invoked as main module.
+  main(process.argv, {
+    // If express followed ocap discipine, we would pass it
+    // access to files and the network and such.
+    express: require('express'),
+    grpc: require('grpc'),
+    clock: () => new Date(),
+    random: Math.random,
+  });
+}

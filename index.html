@@ -1,30 +1,158 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>Electron GRPC test</title>
-    <script type="text/javascript" src="page.js"></script>
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RChain Status Demo</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectre.css/0.5.3/spectre.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectre.css/0.5.3/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectre.css/0.5.3/spectre-icons.min.css">
+
+    <style>
+      #problem { color: red }
+    </style>
   </head>
   <body>
-    <h1>Setup</h1>
-    <p>Remember to connect to an RNode, and deploy the contract before using this dapp.</p>
+    <div class="container">
+      <div class="columns">
+        <div class="column col-10 col-mx-auto">
+          <fieldset class="card form-horizontal">
+            <h2 class="card-title">Sign Up</h2>
+            <div class="columns">
+              <div class="column">
+                <div class="input-group">
+                  <label class="input-group-addon addon-lg" for="name">Name:</label>
+                  <input id="name" type="text" class="form-input input-lg"/>
+                  <button id="register" class="btn btn-primary input-group-btn btn-lg" >Register</button>
+                </div>
+                <div class="divider-vert"></div>
+                <div class="column">
+                  <img id="regAvatar" src="" style="hidden: true" />
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+    <p><em>Each user chooses a name. This name is the public channel on
+    which you will send commands to update and check your
+    status. We're working on signatures, the registry, etc.</em></p>
+    <textarea id="signature" rows="4" cols="50"></textarea>
+            </div>
+          </fieldset>
 
+          <fieldset class="card">
+            <h2 class="card-title">Post Status</h2>
+            <div class="input-group">
+              <label class="input-group-addon addon-lg" for="name">Status:</label>
+              <input id="new-status" type="text" class="form-input input-lg"/>
+              <label class="input-group-addon">
+                nonce: <input type="text" id="nonce" />
+              </label>
+              <button id="set-status" class="btn btn-primary input-group-btn btn-lg">Post</button>
+            </div>
 
-    <h1>Your User Controls</h1>
-    <p>Each user chooses a name. This name is the public channel on which you will send commands to update and check your status. Using a public name is a <strong>huge security hole</strong>, but alas, RNode does not have a working name registry yet. In the future, we will use unforgeable names.</p>
-    <input id="name" type="text" />
-    <button id="register">Register</button>
+            <p>TODO The dapp should only enable one of register or
+              post new depending on whether the name is registered. For
+              now, we trust the user to use them correctly.</p>
+          </fieldset>
 
-    <input id="new-status" type="text" />
-    <button id="set-status">Post</button>
+          <fieldset class="card">
+            <h2 class="subtitle">Check Friend's Status</h2>
+            <p>What friend do you want to check on?</p>
+            <div class="input-group">
+              <label class="input-group-addon addon-lg" for="name">Friend:</label>
+              <input id="friend-name" type="text" class="form-input input-lg"/>
+              <button id="check-status"
+                      class="btn btn-primary input-group-btn btn-lg" >Check</button>
+            </div>
 
-    <p>TODO The dapp should only enable one of register or post new depending on whether the name is registered. For now, we trust the user to use them correctly.</p>
+            <p>Your friend's status is: <span id="friend-status">...</span></p>
+          </fieldset>
 
-    <h1>Check Friend's Status</h1>
-    <p>What friend do you want to check on?</p>
-    <input id="friend-name" type="text" />
-    <button id="check-status">Check</button>
-    <p>Your friend's status is: <span id="friend-status"></p>
+          <div class="card">
+          <div class="tile">
+            <div class="chip">
+              <div class="avatar avatar-lg">
+                <img src="https://robohash.org/dckc?size=48x48&amp;set=set3"
+                     title="signed with KEY1FINGERPRINT"/>
+                <!-- abusing "online" a bit to mean "signed" -->
+                <i class="avatar-presence online"></i>
+              </div>
+              dckc
+            </div>
+            <p class="tile-subtitle">doing cool stuff...</p>
+          </div>
+        </div>
+
+        <div class="tile">
+          <div class="chip">
+            <img src="https://robohash.org/JoshyOrndorff?size=48x48&amp;set=set3" class="avatar avatar-lg" />
+            JoshyOrndorff
+          </div>
+          <p class="tile-subtitle">slackin'...</p>
+        </div>
+        </div>
+
+        <div class="card col-8 col-mx-auto">
+          <h2>Setup</h2>
+          <p>Remember to connect to an RNode, and deploy the contract before using this dapp.</p>
+
+          <p id="problem"></p>
+        </div>
+      </div>
+    </div>
+<script src="sigui/lib/protobuf.min.js"></script>
+<script type="module">
+import statusPage from './page.js';
+window.addEventListener("DOMContentLoaded", () => {
+  const byId = id => document.getElementById(id);
+  const def = obj => Object.freeze(obj);
+
+  const ui = def({
+    nameBox: byId("name"),
+    registerButton: byId("register"),
+    newStatusBox: byId("new-status"),
+    nonceBox: byId("nonce"),
+    setStatusButton: byId("set-status"),
+    friendBox: byId("friend-name"),
+    checkButton: byId("check-status"),
+    friendStatusP: byId("friend-status"),
+    proposeButton: byId("propose"),
+    problem: byId("problem"),
+    signature: byId("signature"),
+    hide: (elt) => { elt.hidden = false; },
+    showText: (elt, txt) => { elt.textContent = txt; elt.hidden = false; },
+    enable: (button) => { button.disabled = false; },
+    disable: (button) => { button.disabled = true; },
+  });
+  const port = def({
+    listen: (handler) => { window.onmessage = event => handler(event.data); },
+    postMessage: (data) => window.postMessage(data, '*'),
+  });
+  statusPage(ui, port, fetch);
+});
+</script>
+<script>
+  function typingPause(field, go, ms) {
+    let timer;
+    field.addEventListener('keyup', (event) => {
+        clearTimeout(timer);
+        if (field.value) {
+          timer = setTimeout(go(field.value), ms);
+        }
+    });
+  }
+
+  const byId = id => document.getElementById(id);
+  const anImg = byId('regAvatar');
+  function updateAvatar(name) {
+    const src = `https://robohash.org/${name}?size=48x48&amp;set=set3`;
+    anImg.setAttribute('src', src);
+    anImg.hidden = false;
+  }
+
+  typingPause(byId('name'), updateAvatar, 500);
+
+</script>
   </body>
 </html>

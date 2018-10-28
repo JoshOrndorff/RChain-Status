@@ -1,21 +1,21 @@
 [server]
-host = "localhost"
-port = 40400
-http-port = 40402
-metrics-port = 40403
+#host = "localhost"
+#port = 40400
+#http-port = 40402
+#metrics-port = 40403
 no-upnp = true
 default-timeout = 2000
 #bootstrap = "rnode://de6eed5d00cf080fc587eeb412cb31a75fd10358@52.119.8.109:40400"
 standalone = true
 #data-dir = "."
-map-size = 1073741824
-casper-block-store-size = 1073741824
-in-memory-store = false
+#map-size = 1073741824
+#casper-block-store-size = 1073741824
+#in-memory-store = false
 max-num-of-connections = 500
 [grpc-server]
-host = "localhost"
+#host = "localhost"
 port = 40401
-port-internal = 40404
+#port-internal = 40404
 [tls]
 #certificate = "/var/lib/rnode/certificate.pem"
 #key = "/var/lib/rnode/key.pem"
