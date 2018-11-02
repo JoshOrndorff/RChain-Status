@@ -29,6 +29,6 @@
     "docopt": "^0.6.2",
     "express": "^4.16.3",
     "grpc": "^1.14.1",
-    "rchain-api": "github:JoshOrndorff/RChain-API#f2fc0c0b9a488a44a9916f72bdafa541fd98ed69"
+    "rchain-api": "^0.7.1-beta.2"
   }
 }

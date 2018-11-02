@@ -1,6 +1,6 @@
 const { RNode, RHOCore } = require('rchain-api');
 const docopt = require('docopt').docopt;
-const { rho } = require('./rhoTemplate')
+const { rhol } = RHOCore;
 
 const usage = `
 
@@ -65,7 +65,7 @@ function bail(response, oops) {
 function registerHandler(myNode, clock, uri) {
   return (req, res) => {
 
-    const rholangCode = rho`
+    const rholangCode = rhol`
     new lookup(\`rho:registry:lookup\`), registerCh in {
       lookup!(\`URI\`, *registerCh)|
 
@@ -95,7 +95,7 @@ function registerHandler(myNode, clock, uri) {
 function setHandler(myNode, clock) {
   return (req, res) => {
 
-    const rholangCode = rho`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`
+    const rholangCode = rhol`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`
 
     const deployData = {
       term: rholangCode,
@@ -119,7 +119,7 @@ function checkHandler(myNode, clock, random) {
     // Generate a public ack channel
     // TODO this should be unforgeable.
     const ack = random().toString(36).substring(7);
-    const rholangCode = rho`@[${req.params.name}, "check"]!(${ack})`;
+    const rholangCode = rhol`@[${req.params.name}, "check"]!(${ack})`;
 
     const deployData = {
       term: rholangCode,

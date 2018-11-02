@@ -10,8 +10,6 @@ import {
 } from './sigui/messageBus.js';
  */
 
-import { fromJSData, toRholang } from './sigui/RHOCore.js';
-
 const def = Object.freeze;
 
 // combination of rchain domain and randomly chosen data.
