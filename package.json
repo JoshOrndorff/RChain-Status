@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --format unix --ignore-pattern node_modules/ *.js sigui/*.js",
     "typecheck": "flow check",
-    "fresh": "rm -rf .rnode/rspace .rnode/casper-block-store && rnode run --data_dir .rnode",
+    "fresh": "rm -rf .rnode/rspace .rnode/casper-block-store && rnode run --data-dir .rnode",
     "deploy-contract": "rnode deploy --phlo-limit 1000000 --phlo-price 1 --from 0x01 --nonce 1 status.rho && rnode propose",
     "start": "node main.js"
   },
