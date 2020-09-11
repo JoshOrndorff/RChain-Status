@@ -1,81 +1,68 @@
-// @flow
+// @ts-check
+/* global HTMLButtonElement, HTMLInputElement, HTMLTextAreaElement */
 
-/*::
-import {
-  type BusPort,
-  type BusMessage,
-  type BusReply,
-  type BusTarget,
-  type FarRef,
-} from './sigui/messageBus.js';
+const { freeze } = Object;
+
+const check = {
+  notNull(x, context) {
+    if (!x) {
+      throw new Error(`null/undefined ${context}`);
+    }
+    return x;
+  },
+
+  /** @type { (elt: unknown) => HTMLButtonElement } */
+  theButton(elt) {
+    if (!(elt instanceof HTMLButtonElement)) { throw new Error('not Button'); }
+    return elt;
+  },
+
+  /** @type { (elt: unknown) => HTMLInputElement } */
+  theInput(elt) {
+    if (!(elt instanceof HTMLInputElement)) { throw new Error('not input'); }
+    return elt;
+  },
+
+  /** @type { (elt: unknown) => HTMLTextAreaElement } */
+  theTextArea(elt) {
+    if (!(elt instanceof HTMLTextAreaElement)) { throw new Error('not input'); }
+    return elt;
+  },
+};
+
+
+/**
+ * @param {{
+ *   getElementById: typeof document.getElementById,
+ *   hide: (elt: Element) => void,
+ *   showText: (elt: Element, txt: string) => void,
+ *   enable: (b: HTMLButtonElement) => void,
+ *   disable: (b: HTMLButtonElement) => void,
+ *  }} dom
+ * @param { typeof fetch } fetch
  */
+export default function statusPage(dom, fetch) {
+  const byId = dom.getElementById;
 
-const def = Object.freeze;
+  const ui = freeze({
+    nameBox: check.theInput(byId('name')),
+    registerButton: byId('register'),
+    newStatusBox: check.theInput(byId('new-status')),
+    nonceBox: check.theInput(byId('nonce')),
+    setStatusButton: byId('set-status'),
+    friendBox: check.theInput(byId('friend-name')),
+    checkButton: check.theButton(byId('check-status')),
+    friendStatusP: byId('friend-status'),
+    proposeButton: byId('propose'),
+    problem: byId('problem'),
+    signature: byId('signature'),
+    anImg: byId('regAvatar'),
+  });
 
-// combination of rchain domain and randomly chosen data.
-const RCHAIN_SIGNING = 'rchain.coop/6kbIdoB2';
-
-
-export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: typeof fetch*/) {
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
-  let toSign = null;
-  let operation = null;
-
-  // bus.attach(`${RCHAIN_SIGNING}/popup`, bus.makeProxy());
-
-  /**
-   * Get an offer to sign data.
-   * @param objs - array of live objects
-   * @param objs[0] - signer making the offer
-   */
-  function offer([signer]) {
-    if (!toSign) { return; }
-    console.log('page requesting signature of', toSign);
-    signer.invoke('requestSignature', [], toSign)
-      .then(({ signature, pubKey }) => {
-        //const withSig = {"register": [getName(), pubKey, signature,
-        // "bogusReturnChan"]}//[].concat(toSign, [{ signature, pubKey }]);
-
-        if (operation === 'register') {
-          // eslint-disable-next-line no-param-reassign
-          ui.signature.value = signature;
-          fetch(urlEncode`/users/${getName()}?sig=${signature}&pubKey=${pubKey}`, { method: 'POST' });
-        } else if (operation === 'post') {
-          fetch(urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}&signature=${signature}`, { method: 'POST' });
-        } else {
-          throw new TypeError('in offer. operation was neither register nor post');
-        }
-      })
-      .catch((problem) => { ui.showText(ui.problem, problem.message); });
-  }
-
-  const pending = [];
-  const signer = makeProxy(`${RCHAIN_SIGNING}/popup`, port, pending);
-  const byTarget = new Map([[`${RCHAIN_SIGNING}/popup`, signer]]);
-  const self = publish(`${RCHAIN_SIGNING}/page`, def({ offer }), byTarget);
-
-  port.listen((rx /*: BusMessage | BusReply */) => {
-    // It's a bit of a fib that we only get BusMessage | BusReply
-    if (!rx || !['invoke', 'success', 'failure'].includes(rx.kind)) { return false; }
-
-    // console.log('page got bus message', rx);
-    if (rx.kind === 'invoke') {
-      return self.receive(rx);
-    }
-
-    if (pending) {
-      if (rx.kind === 'success') {
-        pending[0].resolve(rx.result);
-      } else {
-        pending[0].reject(new Error(rx.message));
-      }
-      pending.pop();
-      return true;
-    }
-
-    return false;
-  });
+  let toSign;
+  let operation;
 
   ui.registerButton.addEventListener('click', () => {
     toSign = getName();
@@ -93,76 +80,66 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
     () => fetch(urlEncode`/users/${friendName()}/status`)
       .then((res) => {
         res.json().then(({ status }) => {
-          ui.showText(ui.friendStatusP, status);
+          dom.showText(ui.friendStatusP, status);
         });
         return res;
       }),
     () => `get status for ${friendName()}`,
   );
 
+  function updateAvatar(name) {
+    const src = `https://robohash.org/${name}?size=48x48&amp;set=set3`;
+    ui.anImg.setAttribute('src', src);
+    ui.anImg.hidden = false;
+  }
+
+  typingPause(ui.nameBox, updateAvatar, 500);
 
   /**
    * Attach remote action to button.
    * On click, disable the button, do the action, enable the button,
    * and, in case of error, show the message.
+   * @param { HTMLButtonElement } button
+   * @param { () => Promise<any> } action
+   * @param { () => string } label
    */
   function remoteAction(button, action, label) {
     button.addEventListener('click', () => {
       console.log('remoteAction button pressed:', label);
-      ui.disable(button);
+      dom.disable(button);
 
       action()
         .then((res) => {
           console.log('remoteAction response was: ', label, res);
           if (res.ok) {
-            ui.hide(ui.problem);
+            dom.hide(ui.problem);
           } else {
             res.json().then((oops) => {
-              ui.showText(ui.problem, `failed to ${label()}: ${oops.message}`);
+              dom.showText(ui.problem, `failed to ${label()}: ${oops.message}`);
             });
           }
           return res;
         })
-        .catch(oops => ui.showText(ui.problem, oops.message))
-        .finally(_ => ui.enable(button));
+        .catch(oops => dom.showText(ui.problem, oops.message))
+        .then(_ => dom.enable(button));
     });
   }
 }
 
-
-// ISSUE: publish and makeProxy belong in messageBus.js
-// but that means exporting them, which means fleshing out type annotations,
-// and I'd rather not take time for that just now.
-function publish(name, obj, byTarget) /*: BusTarget */{
-  function receive({ target, method, refs, args } /*: BusMessage*/) {
-    if (target !== name) { return false; }
-    if (!(method in obj)) { return false; }
-    const locals = refs.map(ref => byTarget.get(ref));
-    console.log(`published ${name} receved call:`, method, locals, args);
-    obj[method](locals, ...args);
-    return true;
-  }
-  return def({ receive });
-}
-
-
-function makeProxy(target, port, pending) /*: FarRef */{
-  function invoke(method, refs, ...args) {
-    if (refs.length > 0) {
-      throw new TypeError('not implemented: proxy with Refs');
+/**
+ * @param { HTMLInputElement } field
+ * @param { (value: string) => void } go
+ * @param { number } ms
+ */
+function typingPause(field, go, ms) {
+  let timer;
+  field.addEventListener('keyup', (_event) => {
+    clearTimeout(timer);
+    if (field.value) {
+      timer = setTimeout(() => go(field.value), ms);
     }
-
-    const msg /*: BusMessage*/ = { target, method, args, refs: [], kind: 'invoke' };
-    const todo = new Promise((resolve, reject) => {
-      pending.push({ resolve, reject });
-    });
-    console.log(`proxy ${target} invoke sending`, msg);
-    port.postMessage(msg);
-    return todo;
-  }
-  return def({ invoke });
+  });
 }
-
 
 function urlEncode(template, ...subs) {
   const encoded = subs.map(encodeURIComponent);

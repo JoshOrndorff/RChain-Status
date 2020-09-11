@@ -103,55 +103,16 @@
     </div>
 <script type="module">
 import statusPage from './page.js';
-window.addEventListener("DOMContentLoaded", () => {
-  const byId = id => document.getElementById(id);
-  const def = obj => Object.freeze(obj);
 
-  const ui = def({
-    nameBox: byId("name"),
-    registerButton: byId("register"),
-    newStatusBox: byId("new-status"),
-    nonceBox: byId("nonce"),
-    setStatusButton: byId("set-status"),
-    friendBox: byId("friend-name"),
-    checkButton: byId("check-status"),
-    friendStatusP: byId("friend-status"),
-    proposeButton: byId("propose"),
-    problem: byId("problem"),
-    signature: byId("signature"),
+window.addEventListener("DOMContentLoaded", () => {
+  statusPage({
+    getElementById: id => document.getElementById(id),
     hide: (elt) => { elt.hidden = false; },
     showText: (elt, txt) => { elt.textContent = txt; elt.hidden = false; },
     enable: (button) => { button.disabled = false; },
     disable: (button) => { button.disabled = true; },
-  });
-  const port = def({
-    listen: (handler) => { window.onmessage = event => handler(event.data); },
-    postMessage: (data) => window.postMessage(data, '*'),
-  });
-  statusPage(ui, port, fetch);
+  }, { fetch });
 });
-</script>
-<script>
-  function typingPause(field, go, ms) {
-    let timer;
-    field.addEventListener('keyup', (event) => {
-        clearTimeout(timer);
-        if (field.value) {
-          timer = setTimeout(go(field.value), ms);
-        }
-    });
-  }
-
-  const byId = id => document.getElementById(id);
-  const anImg = byId('regAvatar');
-  function updateAvatar(name) {
-    const src = `https://robohash.org/${name}?size=48x48&amp;set=set3`;
-    anImg.setAttribute('src', src);
-    anImg.hidden = false;
-  }
-
-  typingPause(byId('name'), updateAvatar, 500);
-
 </script>
   </body>
 </html>
