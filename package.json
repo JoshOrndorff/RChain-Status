@@ -1,6 +1,6 @@
 {
-  "name": "RChain-Status-Dapp",
-  "version": "1.0.2",
+  "name": "rchain-status",
+  "version": "1.1.0",
   "description": "Build your first RChain dapp",
   "main": "main.js",
   "scripts": {
@@ -12,22 +12,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JoshOrndorff/Rchain-Status"
+    "url": "git+https://github.com/rchain-community/Rchain-Status"
   },
-  "author": "Joshy Orndorff",
+  "contributors": ["Dan Connolly", "Joshy Orndorff"],
   "license": "Unlicense",
   "devDependencies": {
     "eslint": "^5.4.0",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "flow-bin": "^0.80.0",
-    "flow-interfaces-chrome": "^0.5.1"
+    "eslint-plugin-import": "^2.14.0"
   },
   "dependencies": {
-    "@grpc/proto-loader": "^0.3.0",
-    "docopt": "^0.6.2",
-    "express": "^4.16.3",
-    "grpc": "^1.14.1",
-    "rchain-api": "^0.7.1-beta.2"
+    "docopt": "^0.6.2"
   }
 }
