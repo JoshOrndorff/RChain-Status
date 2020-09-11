@@ -34,17 +34,17 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
     console.log('page requesting signature of', toSign);
     signer.invoke('requestSignature', [], toSign)
       .then(({ signature, pubKey }) => {
-        //const withSig = {"register": [getName(), pubKey, signature, "bogusReturnChan"]}//[].concat(toSign, [{ signature, pubKey }]);
+        //const withSig = {"register": [getName(), pubKey, signature,
+        // "bogusReturnChan"]}//[].concat(toSign, [{ signature, pubKey }]);
 
-        if (operation === "register"){
-          ui.signature.value = signature
-          fetch(urlEncode`/users/${getName()}?sig=${signature}&pubKey=${pubKey}`, { method: 'POST' })
-        }
-        else if (operation == "post"){
-          fetch(urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}&signature=${signature}`, { method: 'POST' })
-        }
-        else{
-          throw new TypeError("in offer. operation was neither register nor post");
+        if (operation === 'register') {
+          // eslint-disable-next-line no-param-reassign
+          ui.signature.value = signature;
+          fetch(urlEncode`/users/${getName()}?sig=${signature}&pubKey=${pubKey}`, { method: 'POST' });
+        } else if (operation === 'post') {
+          fetch(urlEncode`/users/${getName()}/status?status=${ui.newStatusBox.value}&signature=${signature}`, { method: 'POST' });
+        } else {
+          throw new TypeError('in offer. operation was neither register nor post');
         }
       })
       .catch((problem) => { ui.showText(ui.problem, problem.message); });
@@ -79,12 +79,12 @@ export default function statusPage(ui /*: any*/, port /*: BusPort */, fetch /*: 
 
   ui.registerButton.addEventListener('click', () => {
     toSign = getName();
-    operation = "register";
+    operation = 'register';
   });
 
   ui.setStatusButton.addEventListener('click', () => {
     toSign = [ui.newStatusBox.value, parseInt(ui.nonceBox.value, 10)];
-    operation = "post";
+    operation = 'post';
   });
 
 

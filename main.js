@@ -1,6 +1,9 @@
-const { RNode, RHOCore } = require('rchain-api');
-const docopt = require('docopt').docopt;
-const { rhol } = RHOCore;
+const { docopt } = require('docopt');
+
+const TODO = undefined;
+const RNode = TODO;
+const rhol = TODO;
+const RHOCore = TODO;
 
 const usage = `
 
@@ -30,20 +33,20 @@ function main(argv, { grpc, express, clock, random }) {
   const cli = docopt(usage, { argv: argv.slice(2) });
   console.log('DEBUG: cli:', cli);
 
-  const myNode = RNode(grpc, { host: cli["--host"], port: cli["--port"] });
+  const myNode = RNode(grpc, { host: cli['--host'], port: cli['--port'] });
   const app = express();
 
   // Serve static assets like index.html and page.js from root directory
   app.use(express.static(__dirname));
 
-  app.post('/users/:name', registerHandler(myNode, clock, cli["--register"]));
+  app.post('/users/:name', registerHandler(myNode, clock, cli['--register']));
   app.post('/users/:name/status', setHandler(myNode, clock));
   app.get('/users/:name/status', checkHandler(myNode, clock, random));
 
-  app.listen(cli["--ui-port"], () => {
+  app.listen(cli['--ui-port'], () => {
     console.log('RChain status dapp started.');
-    console.log(`Using ${cli["--host"]}:${cli["--port"]} to contact RNode.`);
-    console.log(`User interface on port ${cli["--ui-port"]}`);
+    console.log(`Using ${cli['--host']}:${cli['--port']} to contact RNode.`);
+    console.log(`User interface on port ${cli['--ui-port']}`);
   });
 }
 
@@ -56,7 +59,7 @@ function main(argv, { grpc, express, clock, random }) {
  * @param oops The failure ...
  *
  */
-function bail(response, oops) {
+function bail(res, oops) {
   console.log(oops);
   res.status(500).send({ message: oops.message });
 }
@@ -64,7 +67,6 @@ function bail(response, oops) {
 
 function registerHandler(myNode, clock, uri) {
   return (req, res) => {
-
     const rholangCode = rhol`
     new lookup(\`rho:registry:lookup\`), registerCh in {
       lookup!(\`URI\`, *registerCh)|
@@ -73,15 +75,15 @@ function registerHandler(myNode, clock, uri) {
         registerForStatus!(${req.params.name}, ${req.query.sig}, ${req.query.pubKey}, "bogusReturn")
       }
     }
-    `.replace("URI", uri) //TODO Do this better
+    `.replace('URI', uri); //TODO Do this better
 
     const deployData = {
       term: rholangCode,
       timestamp: clock().valueOf(),
-      phloPrice: { value: 1}, //TODO These are placeholder values.
-      phloLimit: { value: 1000000},
+      phloPrice: { value: 1 }, //TODO These are placeholder values.
+      phloLimit: { value: 1000000 },
       from: '0x01',
-    }
+    };
 
     // TODO: use a non-trivial return channel and wait for results there.
     myNode.doDeploy(deployData, true)
@@ -94,16 +96,15 @@ function registerHandler(myNode, clock, uri) {
 
 function setHandler(myNode, clock) {
   return (req, res) => {
-
-    const rholangCode = rhol`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`
+    const rholangCode = rhol`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`;
 
     const deployData = {
       term: rholangCode,
       timestamp: clock.valueOf(),
-      phloPrice: { value: 1}, //TODO These are placeholder values.
-      phloLimit: { value: 1000000},
+      phloPrice: { value: 1 }, //TODO These are placeholder values.
+      phloLimit: { value: 1000000 },
       from: '0x01',
-    }
+    };
 
     myNode.doDeploy(deployData, true)
       .then(() => {
@@ -115,7 +116,6 @@ function setHandler(myNode, clock) {
 
 function checkHandler(myNode, clock, random) {
   return (req, res) => {
-
     // Generate a public ack channel
     // TODO this should be unforgeable.
     const ack = random().toString(36).substring(7);
@@ -124,10 +124,10 @@ function checkHandler(myNode, clock, random) {
     const deployData = {
       term: rholangCode,
       timestamp: clock.valueOf(),
-      phloPrice: { value: 1}, //TODO These are placeholder values.
-      phloLimit: { value: 1000000},
+      phloPrice: { value: 1 }, //TODO These are placeholder values.
+      phloLimit: { value: 1000000 },
       from: '0x01',
-    }
+    };
     // Check the status, sending it to the ack channel
     myNode.doDeploy(deployData, true)
       .then(_ => myNode.listenForDataAtPublicName(ack))
@@ -144,7 +144,6 @@ function checkHandler(myNode, clock, random) {
 }
 
 
-
 if (require.main === module) {
   /* eslint-disable global-require */
 
@@ -152,8 +151,8 @@ if (require.main === module) {
   main(process.argv, {
     // If express followed ocap discipine, we would pass it
     // access to files and the network and such.
-    express: require('express'),
-    grpc: require('grpc'),
+    // TODO? express: require('express'),
+    // TODO? grpc: require('grpc'),
     clock: () => new Date(),
     random: Math.random,
   });
