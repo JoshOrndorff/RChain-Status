@@ -1,55 +1,11 @@
-const { docopt } = require('docopt');
-
 const TODO = undefined;
-const RNode = TODO;
-const rhol = TODO;
 const RHOCore = TODO;
 
-const usage = `
-
-const host = argv[2] ? argv[2] : 'localhost';
-const port = argv[3] ? parseInt(argv[3], 10) : 40401;
-const uiPort = argv[4] ? parseInt(process.argv[4], 10) : 8080;
-
-
-Start a fresh node, deploy the contract, note the uri and then start this middleware.
-
-Usage:
-  main.js [options]
-
-Options:
- --host INT             The hostname or IPv4 address of the node
-                        [default: localhost]
- --port INT             The tcp port of the nodes gRPC service
-                        [default: 40401]
- --ui-port INT          The tcp port for the dApp UI to connect on
-                        [default: 8080]
- -c --register URI      The dApp's register contract's URI in the registry
- -h --help              show usage
-
-`;
-
-function main(argv, { grpc, express, clock, random }) {
-  const cli = docopt(usage, { argv: argv.slice(2) });
-  console.log('DEBUG: cli:', cli);
-
-  const myNode = RNode(grpc, { host: cli['--host'], port: cli['--port'] });
-  const app = express();
-
-  // Serve static assets like index.html and page.js from root directory
-  app.use(express.static(__dirname));
-
+/*
   app.post('/users/:name', registerHandler(myNode, clock, cli['--register']));
   app.post('/users/:name/status', setHandler(myNode, clock));
   app.get('/users/:name/status', checkHandler(myNode, clock, random));
-
-  app.listen(cli['--ui-port'], () => {
-    console.log('RChain status dapp started.');
-    console.log(`Using ${cli['--host']}:${cli['--port']} to contact RNode.`);
-    console.log(`User interface on port ${cli['--ui-port']}`);
-  });
-}
-
+*/
 
 /**
  * Helper for when communication with the node goes wrong. Logs the problem
@@ -65,7 +21,7 @@ function bail(res, oops) {
 }
 
 
-function registerHandler(myNode, clock, uri) {
+export function registerHandler(myNode, clock, uri) {
   return (req, res) => {
     const rholangCode = rhol`
     new lookup(\`rho:registry:lookup\`), registerCh in {
@@ -94,7 +50,7 @@ function registerHandler(myNode, clock, uri) {
 }
 
 
-function setHandler(myNode, clock) {
+export function setHandler(myNode, clock) {
   return (req, res) => {
     const rholangCode = rhol`@[${req.params.name}, "newStatus"]!(${req.query.status}, ${req.query.signature}, "notUsingAck")`;
 
@@ -114,7 +70,7 @@ function setHandler(myNode, clock) {
 }
 
 
-function checkHandler(myNode, clock, random) {
+export function checkHandler(myNode, clock, random) {
   return (req, res) => {
     // Generate a public ack channel
     // TODO this should be unforgeable.
@@ -143,17 +99,15 @@ function checkHandler(myNode, clock, random) {
   };
 }
 
+function rhol(template, ...subs) {
+  const literal = val => JSON.stringify(val);
+  const encoded = subs.map(literal);
 
-if (require.main === module) {
-  /* eslint-disable global-require */
-
-  // Import primitive effects only when invoked as main module.
-  main(process.argv, {
-    // If express followed ocap discipine, we would pass it
-    // access to files and the network and such.
-    // TODO? express: require('express'),
-    // TODO? grpc: require('grpc'),
-    clock: () => new Date(),
-    random: Math.random,
+  const out = [];
+  template.forEach((part, ix) => {
+    out.push(part);
+    out.push(encoded[ix]);
   });
+
+  return out.join('');
 }

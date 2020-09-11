@@ -1,6 +1,8 @@
 // @ts-check
 /* global HTMLButtonElement, HTMLInputElement, HTMLTextAreaElement */
 
+import { registerHandler, setHandler, checkHandler } from './main.js';
+
 const { freeze } = Object;
 
 const check = {
@@ -61,23 +63,19 @@ export default function statusPage(dom, fetch) {
 
   const getName = () => ui.nameBox.value;
   const friendName = () => ui.friendBox.value;
-  let toSign;
-  let operation;
 
   ui.registerButton.addEventListener('click', () => {
-    toSign = getName();
-    operation = 'register';
+    registerHandler(getName());
   });
 
   ui.setStatusButton.addEventListener('click', () => {
-    toSign = [ui.newStatusBox.value, parseInt(ui.nonceBox.value, 10)];
-    operation = 'post';
+    setHandler(getName(), ui.newStatusBox.value);
   });
 
 
   remoteAction(
     ui.checkButton,
-    () => fetch(urlEncode`/users/${friendName()}/status`)
+    () => checkHandler(friendName())
       .then((res) => {
         res.json().then(({ status }) => {
           dom.showText(ui.friendStatusP, status);
