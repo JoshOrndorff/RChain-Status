@@ -1,27 +1,33 @@
 {
   "name": "rchain-status",
-  "version": "1.1.0",
+  "version": "0.2.1",
   "description": "Build your first RChain dapp",
-  "main": "main.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --format unix --ignore-pattern node_modules/ *.js sigui/*.js",
-    "typecheck": "flow check",
-    "deploy-contract": "rnode deploy --phlo-limit 1000000 --phlo-price 1 --from 0x01 --nonce 1 status.rho && rnode propose",
-    "start": "node main.js"
+    "typecheck": "tsc -p jsconfig.json",
+    "deploy-contract": "echo rnode deploy --phlo-limit 1000000 --phlo-price 1 --from 0x01 --nonce 1 status.rho && echo rnode propose&& exit 1",
+    "start": "webpack-dev-server --open",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rchain-community/Rchain-Status"
   },
-  "contributors": ["Dan Connolly", "Joshy Orndorff"],
-  "license": "Unlicense",
+  "contributors": [
+    "Dan Connolly",
+    "Joshy Orndorff"
+  ],
+  "license": "GPL-3.0-or-later",
   "devDependencies": {
     "eslint": "^5.4.0",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0"
+    "eslint-plugin-import": "^2.14.0",
+    "html-webpack-plugin": "^4.5.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   },
-  "dependencies": {
-    "docopt": "^0.6.2"
-  }
+  "dependencies": {}
 }

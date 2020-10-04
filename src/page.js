@@ -1,37 +1,9 @@
 // @ts-check
-/* global HTMLButtonElement, HTMLInputElement, HTMLTextAreaElement */
 
+import check from './checkElt';
 import { registerHandler, setHandler, checkHandler } from './main.js';
 
 const { freeze } = Object;
-
-const check = {
-  notNull(x, context) {
-    if (!x) {
-      throw new Error(`null/undefined ${context}`);
-    }
-    return x;
-  },
-
-  /** @type { (elt: unknown) => HTMLButtonElement } */
-  theButton(elt) {
-    if (!(elt instanceof HTMLButtonElement)) { throw new Error('not Button'); }
-    return elt;
-  },
-
-  /** @type { (elt: unknown) => HTMLInputElement } */
-  theInput(elt) {
-    if (!(elt instanceof HTMLInputElement)) { throw new Error('not input'); }
-    return elt;
-  },
-
-  /** @type { (elt: unknown) => HTMLTextAreaElement } */
-  theTextArea(elt) {
-    if (!(elt instanceof HTMLTextAreaElement)) { throw new Error('not input'); }
-    return elt;
-  },
-};
-
 
 /**
  * @param {{
@@ -72,11 +44,10 @@ export default function statusPage(dom, fetch) {
     setHandler(getName(), ui.newStatusBox.value);
   });
 
-
   remoteAction(
     ui.checkButton,
-    () => checkHandler(friendName())
-      .then((res) => {
+    () =>
+      checkHandler(friendName()).then((res) => {
         res.json().then(({ status }) => {
           dom.showText(ui.friendStatusP, status);
         });
@@ -118,8 +89,8 @@ export default function statusPage(dom, fetch) {
           }
           return res;
         })
-        .catch(oops => dom.showText(ui.problem, oops.message))
-        .then(_ => dom.enable(button));
+        .catch((oops) => dom.showText(ui.problem, oops.message))
+        .then((_) => dom.enable(button));
     });
   }
 }

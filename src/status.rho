@@ -1,35 +1,17 @@
-new sigVerify, registerForStatus, uriCh,
-    debug(`rho:io:stdout`),
-    insertArbitrary(`rho:registry:insertArbitrary`) in {
+new registerForStatus,
+  insertArbitrary(`rho:registry:insertArbitrary`),
+  log(`rho:io:stderr`) in {
 
-  // Register the main contract into the registry
-  insertArbitrary!(bundle+{*registerForStatus}, *uriCh)
-  |
-  for (uri <- uriCh){
-    debug!(["Contract registered. URI is ", *uri])
-  }
-  |
-
-  /**
-   * Wrapper around ed25519Verify. Rather than returning bool on a single
-   * ack channel, send ack on exactly one of success or failure channels
-   */
-  contract sigVerify(@data, @signature, @pubKey, success, failure) = {
-    debug!(["in verify wrapper", "data is", data, "sig is ", signature, "pubkey is", pubKey])|
-    new goodSig in {
-      @"ed25519Verify"!(data.toByteArray(), signature.hexToBytes(), pubKey.hexToBytes(), *goodSig)|
-      for (@true <- goodSig){
-        success!(0)|
-        debug!("Successful signature verification")
-        }
-        |
-      for (@false <- goodSig){
-        failure!("Invalid Signature")|
-        debug!("Bad signature :(")
-      }
+  // Insert the main contract into the registry
+  new uriCh in {
+    insertArbitrary!(bundle+{*registerForStatus}, *uriCh) |
+    for (@uri <- uriCh){
+      log!({"registerForStatus registered at": uri})
     }
+
   }
   |
+
 
   /**
    * Users register by supplying a return channel. Contract returns
@@ -39,7 +21,7 @@ new sigVerify, registerForStatus, uriCh,
    * @param signature ed25519 signature over controlPanel
    * @return 0 for success, or a human-readable error message
    */
-  contract registerForStatus(controlPanel, @signature, @pubKey, return) = {
+  contract registerForStatus(controlPanel, return) = {
 
     new goodSig in {
       sigVerify!(*controlPanel, signature, pubKey, *goodSig, *return)|

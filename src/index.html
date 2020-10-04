@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RChain Status Demo</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
+
+  <style>
+    #problem {
+      color: red
+    }
+
+    header button {
+      font-size: x-small;
+      line-height: 0.5;
+      text-transform: uppercase;
+      background-color: lightcoral;
+      margin-top: 0.5em;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="sticky row">
+    <h1 class="col-sm-10">RChain Status dApp</h1>
+    <button class="col-sm-1">Insert REV<br />to play</button>
+  </header>
+  <div class="container">
+    <div class="columns">
+      <div class="column col-10 col-mx-auto">
+        <fieldset class="card form-horizontal">
+          <h2 class="card-title">Sign Up</h2>
+          <div class="columns">
+            <div class="column">
+              <div class="input-group">
+                <label class="input-group-addon addon-lg" for="name">Name:</label>
+                <input id="name" type="text" class="form-input input-lg" />
+                <button id="register" class="btn btn-primary input-group-btn btn-lg">Register</button>
+              </div>
+              <div class="divider-vert"></div>
+              <div class="column">
+                <img id="regAvatar" src="" style="hidden: true" />
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <p><em>Each user chooses a name. This name is the public channel on
+                which you will send commands to update and check your
+                status. We're working on signatures, the registry, etc.</em></p>
+            <textarea id="signature" rows="4" cols="50"></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset class="card">
+          <h2 class="card-title">Post Status</h2>
+          <div class="input-group">
+            <label class="input-group-addon addon-lg" for="name">Status:</label>
+            <input id="new-status" type="text" class="form-input input-lg" />
+            <label class="input-group-addon">
+              nonce: <input type="text" id="nonce" />
+            </label>
+            <button id="set-status" class="btn btn-primary input-group-btn btn-lg">Post</button>
+          </div>
+
+          <p>TODO The dapp should only enable one of register or
+            post new depending on whether the name is registered. For
+            now, we trust the user to use them correctly.</p>
+        </fieldset>
+
+        <fieldset class="card">
+          <h2 class="subtitle">Check Friend's Status</h2>
+          <p>What friend do you want to check on?</p>
+          <div class="input-group">
+            <label class="input-group-addon addon-lg" for="name">Friend:</label>
+            <input id="friend-name" type="text" class="form-input input-lg" />
+            <button id="check-status" class="btn btn-primary input-group-btn btn-lg">Check</button>
+          </div>
+
+          <p>Your friend's status is: <span id="friend-status">...</span></p>
+        </fieldset>
+
+        <div class="card">
+          <div class="tile">
+            <div class="chip">
+              <div class="avatar avatar-lg">
+                <img src="https://robohash.org/dckc?size=48x48&amp;set=set3" title="signed with KEY1FINGERPRINT" />
+                <!-- abusing "online" a bit to mean "signed" -->
+                <i class="avatar-presence online"></i>
+              </div>
+              dckc
+            </div>
+            <p class="tile-subtitle">doing cool stuff...</p>
+          </div>
+        </div>
+
+        <div class="tile">
+          <div class="chip">
+            <img src="https://robohash.org/JoshyOrndorff?size=48x48&amp;set=set3" class="avatar avatar-lg" />
+            JoshyOrndorff
+          </div>
+          <p class="tile-subtitle">slackin'...</p>
+        </div>
+      </div>
+
+      <div class="card col-8 col-mx-auto">
+        <h2>Setup</h2>
+        <p>Remember to connect to an RNode, and deploy the contract before using this dapp.</p>
+
+        <p id="problem"></p>
+      </div>
+    </div>
+  </div>
+  <script src="index.js"></script>
+</body>
+
+</html>
