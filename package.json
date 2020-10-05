@@ -29,5 +29,9 @@
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "htm": "^3.0.4",
+    "mithril": "^2.0.4",
+    "rchain-api": "github:rchain-community/rchain-api#http-client"
+  }
 }
