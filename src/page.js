@@ -1,21 +1,164 @@
 // @ts-check
 
+import { getAddrFromPrivateKey, RNode } from 'rchain-api';
 import check from './checkElt';
 import { registerHandler, setHandler, checkHandler } from './main.js';
-
+import { checkBalance } from './revVault';
+import { Base16 } from 'rchain-api';
 const { freeze } = Object;
 
+console.log('hello from page.js');
+
 /**
- * @param {{
- *   getElementById: typeof document.getElementById,
- *   hide: (elt: Element) => void,
- *   showText: (elt: Element, txt: string) => void,
- *   enable: (b: HTMLButtonElement) => void,
- *   disable: (b: HTMLButtonElement) => void,
- *  }} dom
- * @param { typeof fetch } fetch
+ * @param {T | null | undefined } x
+ * @returns { T }
+ * @template T
  */
-export default function statusPage(dom, fetch) {
+function the(x) {
+  if (x === null || x === undefined)
+    throw new TypeError('BUG: unexpected null / undefined');
+  return x;
+}
+
+/**
+ * @param { DomAccess & HTMLBuilder & MithrilMount
+ *          & NetAccess & ScheduleAccess & CryptoRandom
+ *          & LocalStorage } io
+ *
+ * @typedef {{
+ *   $: typeof document.querySelector,
+ * }} DomAccess
+ *
+ * @typedef {{
+ *   html: any, // TODO: htm(m) type
+ * }} HTMLBuilder
+ *
+ * @typedef {{
+ *   mount: (selector: string, component: import('mithril').Component) => void,
+ * }} MithrilMount
+ *
+ * @typedef {{
+ *   fetch: typeof fetch
+ * }} NetAccess
+ *
+ * @typedef {{
+ *   localStorage: typeof window.localStorage
+ * }} LocalStorage
+ *
+ * @typedef {{
+ *   now: typeof Date.now,
+ *   setTimeout: typeof setTimeout,
+ * }} ScheduleAccess
+ *
+ * @typedef {{
+ *   getRandomValues: typeof window.crypto.getRandomValues
+ * }} CryptoRandom
+ */
+export default function statusPage({
+  $,
+  mount,
+  html,
+  fetch,
+  localStorage,
+  now,
+  setTimeout,
+  getRandomValues,
+}) {
+  const state = (() => {
+    let observerBase = check.theInput($('#observerBase')).value;
+    let observer = RNode(fetch).observer(observerBase);
+    let balance = 0;
+    /** @type { RevAccount | null } */
+    let revAccount = null;
+    let maxAge = 0;
+
+    return {
+      // @ts-ignore
+      set observerURI(value) {
+        observer = RNode(fetch).observer(value);
+      },
+      // @ts-ignore
+      get revAccount() {
+        if (revAccount !== null) return revAccount;
+
+        state.maxAge = 0;
+
+        let privateKeyHex = localStorage.getItem('privateKeyHex');
+        console.log('privateKey from localStorage?', { privateKeyHex });
+        if (typeof privateKeyHex === 'string') {
+          revAccount = getAddrFromPrivateKey(privateKeyHex);
+          if (revAccount) return revAccount;
+          console.log('bad private key', { privateKeyHex });
+        }
+
+        console.log('generating new private key');
+        const eckeylen = 32; // rnode-address.js#L69
+        const buf = new Uint8Array(eckeylen);
+        privateKeyHex = Base16.encode(getRandomValues(buf));
+        revAccount = the(getAddrFromPrivateKey(privateKeyHex));
+        localStorage.setItem('privateKeyHex', privateKeyHex);
+        return revAccount;
+      },
+      // @ts-ignore
+      get balance() {
+        return balance;
+      },
+      // @ts-ignore
+      get maxAge() {
+        return maxAge;
+      },
+      // @ts-ignore
+      set maxAge(value) {
+        maxAge = value;
+        const delta = Math.max(0, value - now());
+        setTimeout(() => {
+          console.log('checkBalance', { revAddr: state.revAccount.revAddr });
+          checkBalance(observer, state.revAccount.revAddr)
+            .then((bal) => {
+              balance = bal;
+              console.log('balance', { balance });
+            })
+            .catch((err) => {
+              console.log(err); // TODO: Errors UI
+            });
+        }, delta);
+      },
+    };
+  })();
+
+  mount('#accountControl', accountControl(state, html));
+}
+
+/**
+ *
+ * @param {{ balance: number, maxAge: number,
+ *           revAccount: RevAccount }} state
+ * @param {*} html
+ *
+ * @typedef { import('rchain-api').Observer } Observer
+ * @typedef { import('rchain-api').RevAccount } RevAccount
+ */
+function accountControl(state, html) {
+  const fmt = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 3,
+  });
+  const REV = 1e8;
+  return freeze({
+    view() {
+      return html`<button
+        title=${state.revAccount.revAddr}
+        onclick=${() => {
+          state.maxAge = 0;
+        }}
+      >
+        ${fmt.format(state.balance / REV)}
+      </button>`;
+    },
+  });
+}
+
+function statusPageOLD(dom, { fetch }) {
   const byId = dom.getElementById;
 
   const ui = freeze({

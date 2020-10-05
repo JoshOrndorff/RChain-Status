@@ -1,23 +1,19 @@
+// @ts-check
+import htm from 'htm';
+import m from 'mithril';
 import statusPage from './page.js';
 
 window.addEventListener('DOMContentLoaded', () => {
-  statusPage(
-    {
-      getElementById: (id) => document.getElementById(id),
-      hide: (elt) => {
-        elt.hidden = false;
-      },
-      showText: (elt, txt) => {
-        elt.textContent = txt;
-        elt.hidden = false;
-      },
-      enable: (button) => {
-        button.disabled = false;
-      },
-      disable: (button) => {
-        button.disabled = true;
-      },
-    },
-    { fetch },
-  );
+  const $ = (selector) => document.querySelector(selector);
+  // const $$ = (selector) => document.querySelectorAll(selector);
+  statusPage({
+    $,
+    mount: (selector, component) => m.mount($(selector), component),
+    html: htm.bind(m),
+    localStorage,
+    fetch,
+    now: Date.now,
+    setTimeout,
+    getRandomValues: (arr) => window.crypto.getRandomValues(arr),
+  });
 });

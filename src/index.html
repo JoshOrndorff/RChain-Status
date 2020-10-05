@@ -14,7 +14,7 @@
     }
 
     header button {
-      font-size: x-small;
+      font-size: small;
       line-height: 0.5;
       text-transform: uppercase;
       background-color: lightcoral;
@@ -26,8 +26,11 @@
 <body>
   <header class="sticky row">
     <h1 class="col-sm-10">RChain Status dApp</h1>
-    <button class="col-sm-1">Insert REV<br />to play</button>
+    <span id="accountControl">
+      <button class="col-sm-1">Insert REV<br />to play</button>
+    </span>
   </header>
+  <input id="observerBase" value="https://observer.testnet.rchain.coop" />
   <div class="container">
     <div class="columns">
       <div class="column col-10 col-mx-auto">
@@ -42,7 +45,7 @@
               </div>
               <div class="divider-vert"></div>
               <div class="column">
-                <img id="regAvatar" src="" style="hidden: true" />
+                <img id="regAvatar" src="" style="display: none" />
               </div>
             </div>
           </div>
@@ -113,7 +116,6 @@
       </div>
     </div>
   </div>
-  <script src="index.js"></script>
 </body>
 
 </html>
