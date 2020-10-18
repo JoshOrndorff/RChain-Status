@@ -46,7 +46,7 @@ function the(x) {
  * }} LocalStorage
  *
  * @typedef {{
- *   now: typeof Date.now,
+ *   now: () => Promise<number>,
  *   setTimeout: typeof setTimeout,
  * }} ScheduleAccess
  *
@@ -110,18 +110,20 @@ export default function statusPage({
       // @ts-ignore
       set maxAge(value) {
         maxAge = value;
-        const delta = Math.max(0, value - now());
-        setTimeout(() => {
-          console.log('checkBalance', { revAddr: state.revAccount.revAddr });
-          checkBalance(observer, state.revAccount.revAddr)
-            .then((bal) => {
-              balance = bal;
-              console.log('balance', { balance });
-            })
-            .catch((err) => {
-              console.log(err); // TODO: Errors UI
-            });
-        }, delta);
+        now().then((t) => {
+          const delta = Math.max(0, value - t);
+          setTimeout(() => {
+            console.log('checkBalance', { revAddr: state.revAccount.revAddr });
+            checkBalance(observer, state.revAccount.revAddr)
+              .then((bal) => {
+                balance = bal;
+                console.log('balance', { balance });
+              })
+              .catch((err) => {
+                console.log(err); // TODO: Errors UI
+              });
+          }, delta);
+        });
       },
     };
   })();

@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', () => {
     html: htm.bind(m),
     localStorage,
     fetch,
-    now: Date.now,
+    now: () => Promise.resolve(Date.now()),
     setTimeout,
     getRandomValues: (arr) => window.crypto.getRandomValues(arr),
   });
