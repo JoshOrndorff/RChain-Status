@@ -4,8 +4,15 @@ import { getAddrFromPrivateKey, RNode } from 'rchain-api';
 import check from './checkElt';
 import { registerHandler, setHandler, checkHandler } from './main.js';
 import { checkBalance } from './revVault';
-import { Base16 } from 'rchain-api';
+import { Base16, rhopm } from 'rchain-api';
+import inboxInfo from 'liquid-democracy/rho_modules/inbox.json';
+
 const { freeze } = Object;
+
+// ISSUE: publish rho_modules in liquid-democracy package
+// ISSUE: rhopm limited to testnet?
+const [_fn, inboxURI] = rhopm.depEntry(inboxInfo);
+console.log({ inboxURI });
 
 console.log('hello from page.js');
 

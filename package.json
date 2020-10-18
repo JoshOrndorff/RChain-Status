@@ -32,6 +32,7 @@
   "dependencies": {
     "htm": "^3.0.4",
     "mithril": "^2.0.4",
+    "liquid-democracy": "../liquid-democracy",
     "rchain-api": "github:rchain-community/rchain-api#http-client"
   }
 }
