@@ -1,13 +1,24 @@
 // @ts-check
 
-import { getAddrFromPrivateKey, RNode } from 'rchain-api';
+import {
+  getAddrFromPrivateKey,
+  makeAccount,
+  makeConnection,
+  RNode,
+} from 'rchain-api';
 import check from './checkElt';
 import { registerHandler, setHandler, checkHandler } from './main.js';
 import { checkBalance } from './revVault';
 import { Base16, rhopm } from 'rchain-api';
+// @ts-ignore resolveJsonModule doesn't work in .js?
 import inboxInfo from 'liquid-democracy/rho_modules/inbox.json';
 
 const { freeze } = Object;
+
+const SEC = 1000;
+const POLL_INTERVAL = 3 * SEC; // ISSUE: arbitrary
+const REV = 10 ** 8;
+const MAX_TX_FEE = { phloPrice: 1, phloLimit: 0.05 * REV }; // ISSUE: UI?
 
 // ISSUE: publish rho_modules in liquid-democracy package
 // ISSUE: rhopm limited to testnet?
@@ -60,6 +71,16 @@ function the(x) {
  * @typedef {{
  *   getRandomValues: typeof window.crypto.getRandomValues
  * }} CryptoRandom
+ *
+ * @typedef { import('rchain-api').Observer } Observer
+ * @typedef { import('rchain-api').Validator } Validator
+ * @typedef { import('rchain-api').RevAccount } RevAccount
+ * @typedef { import('rchain-api/src/rnode-openapi-schema').DeployRequest } DeployRequest
+ *
+ * @typedef {{
+ *   sign: (term: string) => Promise<DeployRequest>,
+ *   polling: () => Promise<void>, // throws to abort
+ * }} SigAccount
  */
 export default function statusPage({
   $,
@@ -72,29 +93,82 @@ export default function statusPage({
   getRandomValues,
 }) {
   const state = (() => {
+    let boxName = check.theInput($('#boxName')).value;
     let observerBase = check.theInput($('#observerBase')).value;
     let observer = RNode(fetch).observer(observerBase);
-    let balance = 0;
+    let validatorBase = check.theInput($('#validatorBase')).value;
+    let validator = RNode(fetch).validator(validatorBase);
+
+    /** @type { string | null } */
+    let privateKeyHex = null;
     /** @type { RevAccount | null } */
     let revAccount = null;
+    let balance = 0;
     let maxAge = 0;
+    /** @type { SigAccount | null } */
+    let sigAccount = null;
+    let conn = null;
+    /** @type { Inbox | null } */
+    let inbox = null;
 
-    return {
-      // @ts-ignore
-      set observerURI(value) {
-        observer = RNode(fetch).observer(value);
+    const resetAccount = async () => {
+      if (!privateKeyHex) return;
+
+      sigAccount = makeAccount(
+        privateKeyHex,
+        observer,
+        { setTimeout, clock: now, period: POLL_INTERVAL },
+        MAX_TX_FEE,
+      );
+      const aConn = makeConnection(state.validator, state.observer, sigAccount);
+      conn = aConn;
+      inbox = await inboxProxy(boxName, conn);
+    };
+
+    const state = {
+      messages: [],
+
+      // @ts-ignore ISSUE: ES-5 only... how to tell tsc that's what we're using?
+      get observer() {
+        return observer;
       },
       // @ts-ignore
+      set observerBase(value) {
+        observer = RNode(fetch).observer(value);
+        resetAccount();
+      },
+
+      // @ts-ignore
+      get validator() {
+        return validator;
+      },
+      // @ts-ignore
+      set validatorBase(value) {
+        validator = RNode(fetch).validator(value);
+        resetAccount();
+      },
+
+      // @ts-ignore
+      get inbox() {
+        return inbox;
+      },
+
+      // @ts-ignore
       get revAccount() {
+        const reset = (x) => {
+          resetAccount();
+          return x;
+        };
+
         if (revAccount !== null) return revAccount;
 
         state.maxAge = 0;
 
-        let privateKeyHex = localStorage.getItem('privateKeyHex');
+        privateKeyHex = localStorage.getItem('privateKeyHex');
         console.log('privateKey from localStorage?', { privateKeyHex });
         if (typeof privateKeyHex === 'string') {
           revAccount = getAddrFromPrivateKey(privateKeyHex);
-          if (revAccount) return revAccount;
+          if (revAccount) return reset(revAccount);
           console.log('bad private key', { privateKeyHex });
         }
 
@@ -104,7 +178,7 @@ export default function statusPage({
         privateKeyHex = Base16.encode(getRandomValues(buf));
         revAccount = the(getAddrFromPrivateKey(privateKeyHex));
         localStorage.setItem('privateKeyHex', privateKeyHex);
-        return revAccount;
+        return reset(revAccount);
       },
       // @ts-ignore
       get balance() {
@@ -133,9 +207,62 @@ export default function statusPage({
         });
       },
     };
+    return state;
   })();
 
   mount('#accountControl', accountControl(state, html));
+  mount('#inboxControl', inboxControl(state, html));
+}
+
+/**
+ * @param {string} boxName
+ * @param {*} conn
+ * @returns {Promise<Inbox>}
+ *
+ * @typedef {{
+ *   uri: () => Promise<string>,
+ *   peek: () => Promise<unknown>,
+ *   read: () => Promise<unknown>,
+ *   readByType: (ty: string) => Promise<unknown>,
+ *   readBySubType: (ty: string, sub: string) => Promise<unknown>,
+ * }} Inbox
+ */
+function inboxProxy(boxName, conn) {
+  return conn.spawn(
+    boxName,
+    `
+    new rl(\`rho:registry:lookup\`),
+        insertArbitrary(\`rho:registry:insertArbitrary\`),
+        ch in {
+      rl!(\`${inboxURI}\`, *ch) | for (Inbox <- ch) {
+        Inbox!(*ch) |
+        for (read, write, peek <- ch) {
+          insertArbitrary!(*write, *ch) | for (@writeURI <- ch) {
+            contract target(@"uri", return) = {
+              return!(writeURI)
+            }
+            |
+            contract target(@"peek", return) = {
+              peek!(*return)
+            }
+            |
+            contract target(@"read", return) = {
+              read!(*return)
+            }
+            |
+            contract target(@"readByType", @ty, return) = {
+              read!(ty, *return)
+            }
+            |
+            contract target(@"readBySubType", @ty, @subty, return) = {
+              read!(ty, subty, *return)
+            }
+          }
+        }
+      }
+    }
+    `,
+  );
 }
 
 /**
@@ -143,9 +270,6 @@ export default function statusPage({
  * @param {{ balance: number, maxAge: number,
  *           revAccount: RevAccount }} state
  * @param {*} html
- *
- * @typedef { import('rchain-api').Observer } Observer
- * @typedef { import('rchain-api').RevAccount } RevAccount
  */
 function accountControl(state, html) {
   const fmt = new Intl.NumberFormat('en-US', {
@@ -163,6 +287,58 @@ function accountControl(state, html) {
       >
         ${fmt.format(state.balance / REV)}
       </button>`;
+    },
+  });
+}
+
+/** @type { (form: Element) => void } */
+const turnOffSubmit = (form) => {
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+  });
+};
+
+/**
+ * @param {{ inbox: Inbox, messages: Message[] }} state
+ * @param {*} html
+ *
+ * @typedef {[string, string, Record<string, unknown> ]} Message
+ */
+function inboxControl(state, html) {
+  const { stringify: show } = JSON;
+  const { keys } = Object;
+  return freeze({
+    view() {
+      return html` <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Subtype</th>
+              <th>Keys</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.messages.map(
+              ([ty, sub, caps]) =>
+                html`<tr>
+                  <td>${ty}</td>
+                  <td>${sub}</td>
+                  <td>${show(keys(caps))}</td>
+                </tr>`,
+            )}
+          </tbody>
+        </table>
+        <br />
+        <button
+          onclick=${async (event) => {
+            event.preventDefault();
+            if (!state.inbox) return;
+            // @ts-ignore
+            state.messages = await state.inbox.peek();
+          }}
+        >
+          Peek!
+        </button>`;
     },
   });
 }
@@ -196,17 +372,17 @@ function statusPageOLD(dom, { fetch }) {
     setHandler(getName(), ui.newStatusBox.value);
   });
 
-  remoteAction(
-    ui.checkButton,
-    () =>
-      checkHandler(friendName()).then((res) => {
-        res.json().then(({ status }) => {
-          dom.showText(ui.friendStatusP, status);
-        });
-        return res;
-      }),
-    () => `get status for ${friendName()}`,
-  );
+  // remoteAction(
+  //   ui.checkButton,
+  //   () =>
+  //     checkHandler(friendName()).then((res) => {
+  //       res.json().then(({ status }) => {
+  //         dom.showText(ui.friendStatusP, status);
+  //       });
+  //       return res;
+  //     }),
+  //   () => `get status for ${friendName()}`,
+  // );
 
   function updateAvatar(name) {
     const src = `https://robohash.org/${name}?size=48x48&amp;set=set3`;

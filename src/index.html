@@ -30,7 +30,20 @@
       <button class="col-sm-1">Insert REV<br />to play</button>
     </span>
   </header>
-  <input id="observerBase" value="https://observer.testnet.rchain.coop" />
+  <form>
+    <fieldset>
+      <legend>Network</legend>
+      <input id="observerBase" value="https://observer.testnet.rchain.coop" />
+      <br />
+      <input id="validatorBase" value="https://node2.testnet.rchain-dev.tk" />
+    </fieldset>
+  </form>
+  <form>
+    <fieldset id="inboxControl">
+      <legend>Messages</legend>
+    </fieldset>
+    <input id="boxName" value="inbox1" />
+  </form>
   <div class="container">
     <div class="columns">
       <div class="column col-10 col-mx-auto">
