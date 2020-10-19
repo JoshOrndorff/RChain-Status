@@ -20,6 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
   statusPage({
     $,
     mount: (selector, component) => m.mount(the($(selector)), component),
+    redraw: () => m.redraw(),
     html: htm.bind(m),
     localStorage,
     fetch,

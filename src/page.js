@@ -53,6 +53,7 @@ function the(x) {
  *
  * @typedef {{
  *   mount: (selector: string, component: import('mithril').Component) => void,
+ *   redraw: () => void,
  * }} MithrilMount
  *
  * @typedef {{
@@ -86,6 +87,7 @@ function the(x) {
 export default function statusPage({
   $,
   mount,
+  redraw,
   html,
   fetch,
   localStorage,
@@ -119,6 +121,8 @@ export default function statusPage({
     let conn = null;
     /** @type { Inbox | null } */
     let inbox = null;
+    /** @type { Message[] } */
+    let messages = [];
 
     const resetAccount = async () => {
       if (!privateKeyHex) return;
@@ -139,8 +143,6 @@ export default function statusPage({
     };
 
     const state = {
-      messages: [],
-
       // @ts-ignore ISSUE: ES-5 only... how to tell tsc that's what we're using?
       get observer() {
         return observer;
@@ -199,6 +201,15 @@ export default function statusPage({
       // @ts-ignore
       get balance() {
         return balance;
+      },
+      // @ts-ignore
+      get messages() {
+        return messages;
+      },
+      // @ts-ignore
+      set messages(value) {
+        messages = value;
+        redraw();
       },
       // @ts-ignore
       get maxAge() {
@@ -373,10 +384,13 @@ function inboxControl(state, html) {
           onclick=${async (event) => {
             event.preventDefault();
             if (!state.inbox) return;
-            // @ts-ignore
-            const expr = await state.inbox.peek();
-            const { ExprPar: messages } = expr;
-            state.messages = messages;
+            /** @type { any } */
+            const data = await state.inbox.peek();
+            /** @type { { ExprPar: Message[] } | Message }  */
+            const messages = data;
+            state.messages = Array.isArray(messages)
+              ? [messages]
+              : messages.ExprPar;
           }}
         >
           Peek!
