@@ -16,7 +16,7 @@ import inboxInfo from 'liquid-democracy/rho_modules/inbox.json';
 const { freeze } = Object;
 
 const SEC = 1000;
-const POLL_INTERVAL = 3 * SEC; // ISSUE: arbitrary
+const POLL_INTERVAL = 5 * SEC; // ISSUE: arbitrary
 const REV = 10 ** 8;
 const MAX_TX_FEE = { phloPrice: 1, phloLimit: 0.05 * REV }; // ISSUE: UI?
 
@@ -64,8 +64,9 @@ function the(x) {
  * }} LocalStorage
  *
  * @typedef {{
- *   now: () => Promise<number>,
+ *   clock: () => Promise<number>,
  *   setTimeout: typeof setTimeout,
+ *   setInterval: typeof setInterval,
  * }} ScheduleAccess
  *
  * @typedef {{
@@ -88,16 +89,24 @@ export default function statusPage({
   html,
   fetch,
   localStorage,
-  now,
+  clock,
   setTimeout,
+  setInterval,
   getRandomValues,
 }) {
+  const rnode = RNode(fetch);
+
+  // ISSUE: only if local
+  runProposer(rnode.admin(check.theInput($('#adminBase')).value), 4 * SEC, {
+    setInterval,
+  });
+
   const state = (() => {
     let boxName = check.theInput($('#boxName')).value;
     let observerBase = check.theInput($('#observerBase')).value;
-    let observer = RNode(fetch).observer(observerBase);
+    let observer = rnode.observer(observerBase);
     let validatorBase = check.theInput($('#validatorBase')).value;
-    let validator = RNode(fetch).validator(validatorBase);
+    let validator = rnode.validator(validatorBase);
 
     /** @type { string | null } */
     let privateKeyHex = null;
@@ -117,12 +126,16 @@ export default function statusPage({
       sigAccount = makeAccount(
         privateKeyHex,
         observer,
-        { setTimeout, clock: now, period: POLL_INTERVAL },
+        { setTimeout, clock, period: POLL_INTERVAL },
         MAX_TX_FEE,
       );
       const aConn = makeConnection(state.validator, state.observer, sigAccount);
       conn = aConn;
       inbox = await inboxProxy(boxName, conn);
+      inbox.write(['Big', 'bad', { name: 'wolf', teeth: 'large' }]);
+      const uri = await inbox.uri();
+      // TODO: save to localStorage; display
+      console.log('inbox', { uri });
     };
 
     const state = {
@@ -162,7 +175,10 @@ export default function statusPage({
 
         if (revAccount !== null) return revAccount;
 
-        state.maxAge = 0;
+        state.maxAge = 0.1 * SEC;
+        privateKeyHex = check.theInput($('#pkHex')).value;
+        revAccount = getAddrFromPrivateKey(privateKeyHex);
+        return reset(revAccount);
 
         privateKeyHex = localStorage.getItem('privateKeyHex');
         console.log('privateKey from localStorage?', { privateKeyHex });
@@ -191,8 +207,8 @@ export default function statusPage({
       // @ts-ignore
       set maxAge(value) {
         maxAge = value;
-        now().then((t) => {
-          const delta = Math.max(0, value - t);
+        clock().then((t) => {
+          const delta = Math.max(0, maxAge - t);
           setTimeout(() => {
             console.log('checkBalance', { revAddr: state.revAccount.revAddr });
             checkBalance(observer, state.revAccount.revAddr)
@@ -201,6 +217,7 @@ export default function statusPage({
                 console.log('balance', { balance });
               })
               .catch((err) => {
+                state.maxAge = maxAge * 1.5 + 0.1 * SEC;
                 console.log(err); // TODO: Errors UI
               });
           }, delta);
@@ -215,12 +232,31 @@ export default function statusPage({
 }
 
 /**
+ * @param {import('rchain-api/types/src/rnode').RNodeAdmin} proposer
+ * @param {number} period
+ * @param {{ setInterval: typeof setInterval }} sched
+ */
+function runProposer(proposer, period, { setInterval }) {
+  const pid = setInterval(() => {
+    proposer
+      .propose()
+      .then(() => {
+        console.log('proposed');
+      })
+      .catch((err) => {
+        console.log('propose failed', { err: err.message });
+      });
+  }, period);
+}
+
+/**
  * @param {string} boxName
  * @param {*} conn
  * @returns {Promise<Inbox>}
  *
  * @typedef {{
  *   uri: () => Promise<string>,
+ *   write: (msg: [string, string, Record<string, unknown>]) => Promise<string>,
  *   peek: () => Promise<unknown>,
  *   read: () => Promise<unknown>,
  *   readByType: (ty: string) => Promise<unknown>,
@@ -240,6 +276,10 @@ function inboxProxy(boxName, conn) {
           insertArbitrary!(*write, *ch) | for (@writeURI <- ch) {
             contract target(@"uri", return) = {
               return!(writeURI)
+            }
+            |
+            contract target(@"write", @m, return) = {
+              write!(m, *return)
             }
             |
             contract target(@"peek", return) = {
@@ -282,7 +322,7 @@ function accountControl(state, html) {
       return html`<button
         title=${state.revAccount.revAddr}
         onclick=${() => {
-          state.maxAge = 0;
+          state.maxAge = 0.05 * SEC;
         }}
       >
         ${fmt.format(state.balance / REV)}
@@ -334,7 +374,9 @@ function inboxControl(state, html) {
             event.preventDefault();
             if (!state.inbox) return;
             // @ts-ignore
-            state.messages = await state.inbox.peek();
+            const expr = await state.inbox.peek();
+            const { ExprPar: messages } = expr;
+            state.messages = messages;
           }}
         >
           Peek!

@@ -23,8 +23,9 @@ window.addEventListener('DOMContentLoaded', () => {
     html: htm.bind(m),
     localStorage,
     fetch,
-    now: () => Promise.resolve(Date.now()),
+    clock: () => Promise.resolve(Date.now()),
     setTimeout,
+    setInterval,
     getRandomValues: (arr) => window.crypto.getRandomValues(arr),
   });
 });
